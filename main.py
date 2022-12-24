@@ -1,16 +1,43 @@
-# This is a sample Python script.
+import pickle
+import os
+import networkx as nx
+import numpy as np
+import pandas as pd
+import scipy as sp
+import matplotlib
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 
+def loadGraphs():
+    #read node attributes
+    node_attributes = pickle.load(open('data/node_attributes', 'rb'))
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+    #read mainGraph to reduce time
+    mainGraph = pickle.load(open('data/mergedGraph', 'rb'))
 
+    # assign directory
+    directory = 'data/day_graphs'
+
+    #for one merged graph
+    mergedGraph = nx.Graph()
+
+    #for all graphs in a list
+    all_graphs = np.array([])
+
+    # iterate over files in that directory
+    for filename in os.scandir(directory):
+        if filename.is_file():
+            graph = pickle.load(open(filename, 'rb'))
+            # print(graph.nodes())
+            all_graphs = np.append(all_graphs, graph)
+
+            # create merged Graph
+            # mergedGraph = nx.compose(mergedGraph, graph)
+
+    # nx.write_gpickle(mergedGraph, "data/mergedGraph")
+    nx.draw(mainGraph, with_labels=True, pos=nx.spring_layout(mainGraph), edge_color='red')
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    loadGraphs()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
