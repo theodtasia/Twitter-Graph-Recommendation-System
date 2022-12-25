@@ -6,6 +6,8 @@ import pandas as pd
 import scipy as sp
 import matplotlib
 
+from features_extraction import FeaturesExtraction
+
 
 def loadGraphs():
     #read node attributes
@@ -34,7 +36,14 @@ def loadGraphs():
             # mergedGraph = nx.compose(mergedGraph, graph)
 
     # nx.write_gpickle(mergedGraph, "data/mergedGraph")
-    nx.draw(mainGraph, with_labels=True, pos=nx.spring_layout(mainGraph), edge_color='red')
+    # nx.draw(mainGraph, with_labels=True, pos=nx.spring_layout(mainGraph), edge_color='red')
+    node_attributes_dataframe = pd.DataFrame(node_attributes).T
+
+    node_features = FeaturesExtraction(node_attributes_dataframe)
+    # print(node_features.attributes)
+    # print(node_features.attributes['followers_to_following'])
+
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
