@@ -30,8 +30,12 @@ class FeaturesExtraction:
 
         self.attributes["following_per_age"] = attributes["following"] / attributes["twitter_age"]
 
-        #TODO find counts per party
-        #  self.attributes["percentage_lists_of_party"] = attributes["lists"] / \
-        #                                                 attributes.groupby(['party'])['lists'].count().reset_index(name="count")
-        # self.attributes["percentage_tweets_of_party"] = attributes["total_tweets"] / \
-        #                                                 (attributes.groupby(['party'])['total_tweets'].count())
+        self.attributes['tweets_per_party_number'] = attributes.groupby(['party'])['total_tweets'].transform('sum')
+
+        self.attributes['lists_per_party_number'] = attributes.groupby(['party'])['total_tweets'].transform('sum')
+
+        self.attributes["percentage_tweets_of_party"] = attributes["total_tweets"] / attributes['tweets_per_party_number']
+
+        self.attributes["percentage_list_of_party"] = attributes["total_tweets"] / attributes['lists_per_party_number']
+
+        self.attributes.drop(['tweets_per_party_number', 'lists_per_party_number'], axis=1, inplace=True)
