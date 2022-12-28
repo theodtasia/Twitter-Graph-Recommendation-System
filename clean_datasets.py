@@ -1,4 +1,6 @@
 import pickle
+from os import mkdir
+from os.path import exists
 
 import networkx as nx
 from networkx import relabel_nodes, write_gpickle
@@ -21,6 +23,9 @@ class CleanData:
         return pickle.load(open(original_path + file_path, 'rb'))
 
     def saveToPickle(self):
+        if not exists(clean_data_path[:-1]):
+            mkdir(clean_data_path[:-1])
+            mkdir(clean_data_path + 'day_graphs')
         with open(clean_data_path + 'node_attributes', 'wb') as f:
             pickle.dump(self.node_attributes, f)
         for i, graph in enumerate(self.graphs):
@@ -56,7 +61,7 @@ class CleanData:
 
     def correctIndex(self):
         newIndexes = {
-            old_index : new_index
+            old_index : new_index - 1
             for new_index, old_index in enumerate(self.nodesWithAvailableFeatures())
         }
         self.node_attributes = {
@@ -65,5 +70,4 @@ class CleanData:
         }
         for graph in self.graphs:
             relabel_nodes(graph, newIndexes, copy=False)
-
 
