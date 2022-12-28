@@ -92,7 +92,7 @@ class Dataset:
         return LinkNeighborLoader(
             self.graph,
             # Sample 30 neighbors for each node for 2 iterations
-            num_neighbors=[1] * 2,
+            num_neighbors=[10] * 2,
             # Use a batch size of _ for sampling training nodes
             batch_size=batch_size,
             edge_label_index=self.graph.edge_label_index,
