@@ -37,9 +37,8 @@ def loadGraphs():
 
     # nx.write_gpickle(mergedGraph, "data/mergedGraph")
     # nx.draw(mainGraph, with_labels=True, pos=nx.spring_layout(mainGraph), edge_color='red')
-    node_attributes_dataframe = pd.DataFrame(node_attributes).T
 
-    node_features = FeaturesExtraction(node_attributes_dataframe)
+    node_features = FeaturesExtraction(node_attributes)
     # print(node_features.attributes)
     # print(node_features.attributes['followers_to_following'])
 

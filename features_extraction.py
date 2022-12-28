@@ -1,11 +1,21 @@
 import pandas as pd
 
-
 class FeaturesExtraction:
 
-    def __init__(self, attributes):
-        self.attributes = attributes
-        self.__extract_features(attributes)
+    def __init__(self, attributes, extract_attr=False, turn_to_numeric=False):
+        """
+        :param attributes: as read from node_attributes file (dictionary)
+        :param extract_attr:
+        :param turn_to_numeric:
+        """
+        self.attributes = self.turn_to_dataframe(attributes)
+        if extract_attr:
+            self.__extract_features(attributes)
+        if turn_to_numeric:
+            self.__turn_to_numeric()
+
+    def turn_to_dataframe(self, attributes):
+        return pd.DataFrame(attributes).transpose()
 
     def __extract_features(self, attributes):
         """Preprocessing and extraction of new features from node attributes."""
@@ -39,3 +49,9 @@ class FeaturesExtraction:
         self.attributes["percentage_list_of_party"] = attributes["total_tweets"] / attributes['lists_per_party_number']
 
         self.attributes.drop(['tweets_per_party_number', 'lists_per_party_number'], axis=1, inplace=True)
+
+
+    def __turn_to_numeric(self):
+        self.attributes['verified'] = self.attributes['verified'].astype(int)
+        self.attributes = pd.get_dummies(self.attributes, prefix=['party'], columns=['party'], drop_first=True)
+

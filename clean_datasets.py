@@ -74,7 +74,7 @@ class CleanData:
 
     def correctIndex(self):
         newIndexes = {
-            old_index : new_index - 1
+            old_index : new_index
             for new_index, old_index in enumerate(self.nodesWithAvailableFeatures())
         }
         self.node_attributes = {
@@ -102,8 +102,6 @@ class CleanData:
             merged = nx.compose(merged, graph)
 
         print("Merged: ", merged)
-
-
 
 
 
