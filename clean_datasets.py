@@ -17,7 +17,20 @@ class CleanData:
         self.graphs = self.loadDayGraphs()
         self.dropEdgesInvolvingFeaturelessNodes()
         self.correctIndex()
+        self.force_temporal()
         self.saveToPickle()
+
+    def print_graph_edges(self):
+        count = 0
+        for graph in self.graphs:
+            # print(graph.edges())
+            count += len(graph.edges())
+        print("|E| =", count)
+
+    def print_graphs(self):
+        for graph in self.graphs:
+            print(graph)
+
 
     def readPickleFile(self, file_path):
         return pickle.load(open(original_path + file_path, 'rb'))
@@ -70,4 +83,28 @@ class CleanData:
         }
         for graph in self.graphs:
             relabel_nodes(graph, newIndexes, copy=False)
+
+
+    def check_temporal(self):
+        for i in range(numOfGraphs + 1):
+            for j in range(i + 1, numOfGraphs + 1):
+                g1 = self.graphs[i]
+                g2 = self.graphs[j]
+                if len(nx.intersection(g1, g2).edges()) > 0:
+                    print("Intersection found")
+
+    def force_temporal(self):
+        merged = nx.Graph()
+        for graph in self.graphs:
+            intersection_edges = nx.intersection(merged, graph).edges()
+            graph.remove_edges_from(e for e in graph.edges if e in intersection_edges)
+            graph.remove_nodes_from(list(nx.isolates(graph)))
+            merged = nx.compose(merged, graph)
+
+        print("Merged: ", merged)
+
+
+
+
+
 
