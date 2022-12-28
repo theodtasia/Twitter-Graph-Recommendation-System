@@ -51,18 +51,14 @@ class Dataset:
                                     for split in transform(self.graph))
 
         neg = self.negative_sampling(supervision)
-        print(f'original\n{self.graph.edge_index}\nmsg\n{msg_pass}\nsupv\n{supervision}\nneg\n{neg}')
 
         edge_label = torch.cat([
             torch.full((edge_set.shape[1], ), edge_label, dtype=torch.int8, device=device)
             for edge_set, edge_label in [(msg_pass, 0), (supervision, 1), (neg, 2)]
         ])
-        print(edge_label)
         self.graph.edge_label_index = torch.cat([msg_pass, supervision, neg], dim=1)
         del self.graph['edge_index']
         self.graph.edge_label = edge_label
-        print(self.graph)
-        print(self.graph.edge_label_index)
 
 
     def negative_sampling(self, supervision):
@@ -114,7 +110,7 @@ ds = Dataset()
 ds.split_edges()
 loader = ds.dataloader()
 
-print(len(loader))
+print('# batches = ', len(loader))
 batch = next(iter(loader))
 print("\nBatch: ")
 print(batch)
