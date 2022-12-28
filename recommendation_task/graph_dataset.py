@@ -33,7 +33,7 @@ class Dataset:
         return x
 
     def get_day_graph_edge_index(self, day):
-        # get undirected edges of graph_day as tensor
+        # get directed edges of graph_day as tensor
         edges = pickle.load(open(f'{clean_data_path}{Graph_}{day}', 'rb')).edges()
         return self.to_directed_edge_index(edges)
 
