@@ -56,7 +56,7 @@ class Dataset:
 
     def _get_node_attributes(self):
         x = pickle.load(open(f'{clean_data_path}node_attributes', 'rb'))
-        x = FeaturesExtraction(x, turn_to_numeric=True, scale=True).attributes   # dataframe
+        x = FeaturesExtraction(x, extract_attr=True, turn_to_numeric=True, scale=True).attributes   # dataframe
         x = x.values.tolist()
         x = torch.tensor(x, device=self.device, dtype=torch.float32)
         return x

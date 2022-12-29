@@ -54,8 +54,8 @@ class TrainClassificationModel:
             print('\nDay: ', self.dataset.day)
 
             g_train, test_edges = self.dataset.get_dataset_method2()
-            #if self.dataset.day < 60:
-            #    continue
+            if self.dataset.day < 62:
+                continue
             self.run_day_training_method2(g_train)
 
 
