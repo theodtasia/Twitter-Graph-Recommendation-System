@@ -1,8 +1,10 @@
 import pandas as pd
+from sklearn.preprocessing import StandardScaler
+
 
 class FeaturesExtraction:
 
-    def __init__(self, attributes, extract_attr=False, turn_to_numeric=False):
+    def __init__(self, attributes, extract_attr=False, turn_to_numeric=False, scale=False):
         """
         :param attributes: as read from node_attributes file (dictionary)
         :param extract_attr:
@@ -13,6 +15,8 @@ class FeaturesExtraction:
             self.__extract_features(attributes)
         if turn_to_numeric:
             self.__turn_to_numeric()
+        if scale:
+            self.__scale()
 
     def turn_to_dataframe(self, attributes):
         return pd.DataFrame(attributes).transpose()
@@ -55,3 +59,7 @@ class FeaturesExtraction:
         self.attributes['verified'] = self.attributes['verified'].astype(int)
         self.attributes = pd.get_dummies(self.attributes, prefix=['party'], columns=['party'], drop_first=True)
 
+    def __scale(self):
+        scaler = StandardScaler()
+        self.attributes[self.attributes.columns] = \
+            scaler.fit_transform(self.attributes[self.attributes.columns])
