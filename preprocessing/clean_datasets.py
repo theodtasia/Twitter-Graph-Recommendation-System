@@ -5,8 +5,8 @@ from os.path import exists
 import networkx as nx
 from networkx import relabel_nodes, write_gpickle
 
-original_path = 'data/'
-clean_data_path = 'data/clean_data/'
+original_path = '../data/'
+clean_data_path = '../data/clean_data/'
 numOfGraphs = 62
 nodeFeaturesDim = 7
 Graph_ = 'day_graphs/Graph_'

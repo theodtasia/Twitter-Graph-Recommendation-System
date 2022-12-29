@@ -2,8 +2,8 @@ import pickle
 from random import shuffle
 
 import torch
-from clean_datasets import clean_data_path, Graph_
-from features_extraction import FeaturesExtraction
+from preprocessing.clean_datasets import clean_data_path, Graph_
+from preprocessing.features_extraction import FeaturesExtraction
 from torch_geometric.data import Data
 from torch_geometric.transforms import RandomLinkSplit
 from torch_geometric.loader import LinkNeighborLoader
