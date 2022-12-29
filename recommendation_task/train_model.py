@@ -5,13 +5,13 @@ from recommendation_task.gnn_model import GNN_model
 from recommendation_task.graph_dataset import Dataset
 from utils import set_seed, device
 
-LR = 0.01
+LR = 0.1
 WEIGHT_DECAY = 1e-5
-HIDDEN_CHANNELS = 6
+HIDDEN_CHANNELS = 16
 N_CONV_LAYERS = 1
-CONV_TYPE = 'SAGEConv'
+CONV_TYPE = 'GINConv'
 ACT_FUNC = relu
-EPOCHS = 100
+EPOCHS = 1000
 
 class TrainClassificationModel:
 

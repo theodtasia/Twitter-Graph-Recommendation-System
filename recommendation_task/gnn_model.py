@@ -1,4 +1,4 @@
-from torch import nn
+from torch import nn, sigmoid
 from torch.nn.functional import dropout
 from torch_geometric.nn import SAGEConv, GINConv, GATConv, GCNConv
 from torch_geometric.nn.models import MLP
@@ -28,7 +28,7 @@ class GNN_model(nn.Module):
             return GCNConv(in_channels= in_channels, out_channels=hidden_channels, normalize=True)
         elif conv_type == 'GINConv':
             return GINConv(MLP(in_channels= in_channels, hidden_channels=hidden_channels, out_channels=hidden_channels,
-                               num_layers=3, act=act_func.__name__, dropout=0.4))
+                               num_layers=5, act=act_func.__name__, dropout=0.2))
         elif conv_type == 'GATConv':
             return GATConv(in_channels= in_channels, out_channels=hidden_channels, dropout=0.1)
 
@@ -49,7 +49,6 @@ class GNN_model(nn.Module):
     def decode(self, z, edge_index):
         # dot product
         out = (z[edge_index[0]] * z[edge_index[1]]).sum(dim=-1)
-
         return out
 
 
