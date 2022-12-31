@@ -1,20 +1,22 @@
 import pickle
-from os import mkdir
+from os import mkdir, scandir
 from os.path import exists
 
 import networkx as nx
 from networkx import relabel_nodes, write_gpickle
 
-original_path = '../data/'
+original_path = '../data/original_data/'
 clean_data_path = '../data/clean_data/'
-numOfGraphs = 62
-nodeFeaturesDim = 7
 Graph_ = 'day_graphs/Graph_'
 
 class CleanData:
     def __init__(self):
-        self.node_attributes = self.readPickleFile('node_attributes')
-        self.graphs = self.loadDayGraphs()
+        self.node_attributes = CleanData.readNodeAttributes(original=True)
+        self.graphs = CleanData.loadDayGraphs(original=True)
+        self.numOfGraphs = len(self.graphs)
+        self.attr_dim = len(next(iter(self.node_attributes.values())))
+
+        # self.checkForNullNodeFeatures()
         self.dropEdgesInvolvingFeaturelessNodes()
         self.correctIndex()
         self.force_temporal()
@@ -31,9 +33,15 @@ class CleanData:
         for graph in self.graphs:
             print(graph)
 
+    @staticmethod
+    def readNodeAttributes(original=False):
+        path = original_path if original else clean_data_path
+        path += 'node_attributes'
+        return CleanData.readPickleFile(path)
 
-    def readPickleFile(self, file_path):
-        return pickle.load(open(original_path + file_path, 'rb'))
+    @staticmethod
+    def readPickleFile(path):
+        return pickle.load(open(path, 'rb'))
 
     def saveToPickle(self):
         if not exists(clean_data_path[:-1]):
@@ -50,16 +58,18 @@ class CleanData:
     def checkForNullNodeFeatures(self):
         # no null values found
         for node, attributes in self.node_attributes.items():
-            if len(attributes) < nodeFeaturesDim:
+            if len(attributes) < self.attr_dim:
                 print(node, attributes)
             for attr, value in attributes.items():
                 if not isinstance(value, (int, str)):
                     print(node, attr, value)
 
-    def loadDayGraphs(self):
+    @staticmethod
+    def loadDayGraphs(original=False):
+        path = original_path if original else clean_data_path
         graphs = []
-        for day in range(numOfGraphs + 1):
-            day_graph = self.readPickleFile(f'{Graph_}{day}')
+        for day, _ in enumerate(scandir(path + 'day_graphs')):
+            day_graph = CleanData.readPickleFile(f'{path}{Graph_}{day}')
             graphs.append(day_graph)
         return graphs
 
@@ -86,8 +96,8 @@ class CleanData:
 
 
     def check_temporal(self):
-        for i in range(numOfGraphs + 1):
-            for j in range(i + 1, numOfGraphs + 1):
+        for i in range(self.numOfGraphs):
+            for j in range(i + 1, self.numOfGraphs):
                 g1 = self.graphs[i]
                 g2 = self.graphs[j]
                 if len(nx.intersection(g1, g2).edges()) > 0:

@@ -1,6 +1,6 @@
-import pickle
-from random import shuffle
-from time import time
+import glob
+import random
+from random import Random, choice, seed
 
 import torch
 from torch_geometric.data import Data
@@ -8,7 +8,9 @@ from torch_geometric.transforms import RandomLinkSplit
 from torch_geometric.utils import negative_sampling
 
 from preprocessing.clean_datasets import *
+from preprocessing.clean_datasets import clean_data_path, Graph_
 from preprocessing.features_extraction import FeaturesExtraction
+from preprocessing.find_negative_edges import FindNegativeEdges
 from utils import dotdict, device, set_seed
 
 
@@ -18,17 +20,21 @@ class Dataset:
         self.device = device()
         set_seed()
 
-        self.day = 1
+        self.day = 0
+        self.numOfGraphs = len(glob.glob(f'{clean_data_path}{Graph_}*'))
         self.next_day_edges = None
 
+        # load first day graph
         self.graph = Data(x = self._get_node_attributes(),
                           edge_index = self._get_day_graph_edge_index(self.day))
         self.graph.to(device=self.device)
+        self.calledNegativePicker = 0
         self.attr_dim = self.graph.x.shape[1]
 
 
     def has_next(self):
-        return self.day <= numOfGraphs
+        return self.day < self.numOfGraphs
+
 
     def get_dataset(self):
         """
@@ -79,24 +85,32 @@ class Dataset:
                                     add_negative_train_samples=False, neg_sampling_ratio=0)
         msg_pass, supervision, _ = (self._to_undirected(split.edge_label_index)
                                     for split in transform(self.graph))
-        neg = self._negative_sampling(supervision)
+        neg = self.negative_sampling_method2()
+        print(neg)
         return msg_pass, supervision, neg
 
 
     def _negative_sampling(self, supervision):
-        nodes = list(set(v.item() for v in self.graph.edge_index.reshape(-1)))
-        positive_edges = set((v.item(),u.item()) for v, u in zip(self.graph.edge_index[0],
-                                                                 self.graph.edge_index[1]))
+        self.calledNegativePicker += 1
+        seed(self.calledNegativePicker)
         negative_samples = set()
         print(supervision.shape)
+
         for v in supervision[0]:
             v = v.item()
-            shuffle(nodes)
-            for u in nodes:
-                if u != v and (u,v) not in negative_samples \
-                and (v,u) not in positive_edges and (u,v) not in positive_edges:
-                    negative_samples.add((v, u))
-                    break
+            negativesV = self.negativesPerNode[v]
+
+            if len(negativesV) > 0:
+                already_selected = True
+                i = 0
+                while already_selected and i <= len(negativesV):
+                    i += 1
+                    u = negativesV[random.randint(0, len(negativesV) - 1)]
+                    already_selected = (u,v) in negative_samples or (v,u) in negative_samples
+
+                    if not already_selected:
+                        negative_samples.add((v, u))
+
         return self._to_undirected(
                self._to_directed_edge_index(negative_samples))
 
@@ -104,7 +118,7 @@ class Dataset:
     def get_dataset_method2(self):
 
         negative = dotdict({'training' : self._to_undirected(self.graph.edge_index),
-                                'negative' : self.negative_sampling_method2()})
+                            'negative' : self.negative_sampling_method2()})
 
         self.next_day_edges = self._get_day_graph_edge_index(self.day + 1)
         self._increment_day()
@@ -114,6 +128,12 @@ class Dataset:
     def negative_sampling_method2(self):
         neg_edge_index = negative_sampling(
             edge_index=self.graph.edge_index,  # positive edges
-            num_nodes=self.graph.num_nodes,  # number of nodes
+            num_nodes=torch.max(self.graph.edge_index).item(),  # number of nodes
             num_neg_samples=self.graph.edge_index.size(1))  # number of neg_sample equal to number of pos_edges
         return self._to_undirected(neg_edge_index)
+
+ds = Dataset()
+while ds.has_next():
+    ds.get_dataset()
+    print(ds.day, ds.graph)
+
