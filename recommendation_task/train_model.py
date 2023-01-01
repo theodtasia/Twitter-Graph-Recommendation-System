@@ -2,6 +2,7 @@ import torch
 from torch import relu, tanh
 from torch.nn import BCEWithLogitsLoss
 from torch.nn.functional import leaky_relu
+from torchmetrics import RetrievalRecall
 
 from recommendation_task.gnn_model import GNN_model
 from recommendation_task.graph_dataset import Dataset
@@ -15,6 +16,7 @@ CONV_TYPE = 'GINConv'
 ACT_FUNC = leaky_relu
 DECODER_LAYERS = None
 EPOCHS = 100
+at_k = [10]
 
 class TrainClassificationModel:
 
@@ -24,6 +26,7 @@ class TrainClassificationModel:
         self.device = device()
         self.dataset = Dataset(self.device)
         self.criterion = BCEWithLogitsLoss()
+        self.metrics = {k : RetrievalRecall(k=k) for k in at_k}
         self.train_model()
 
 
@@ -59,6 +62,7 @@ class TrainClassificationModel:
             train_edges, test_edges = self.dataset.get_dataset()
 
             self.run_day_training(train_edges)
+            self.test_on_next_day_graph(train_edges, test_edges)
 
 
     def run_day_training(self, train_edges):
@@ -71,8 +75,10 @@ class TrainClassificationModel:
 
             z = self.model(self.dataset.graph.x, train_edges)
             supervision_scores = self.model.decode(z, train_edges)
+
             negative_edges = self.dataset.negative_sampling()
             negative_scores = self.model.decode(z, negative_edges)
+
             scores = torch.cat([supervision_scores, negative_scores])
             link_labels = torch.tensor([1] * len(supervision_scores) + [0] * len(negative_scores),
                                        device=self.device, dtype=torch.float32)
@@ -81,9 +87,24 @@ class TrainClassificationModel:
 
             loss.backward()
             self.optimizer.step()
-            print('Epoch', epoch, loss.item())
+            if epoch % 10 == 0 or epoch == EPOCHS -1:
+                print('Epoch', epoch, loss.item())
 
 
+
+    def test_on_next_day_graph(self, train_edges, test_edges):
+        self.model.eval()
+        with torch.no_grad():
+            # perform evaluation on cpu to avoid cuda.OutOfMemoryError
+            self.model = self.model.to('cpu')
+            x = self.dataset.graph.x.to('cpu')
+            train_edges = train_edges.to('cpu')
+
+            z = self.model(x, train_edges)
+            scores = self.model.decode(z, test_edges.test_edges)
+
+            for k, metric in self.metrics.items():
+                print(f'Recall@{k} = {metric(scores, test_edges.targets, indexes=test_edges.indexes)}')
 
 TrainClassificationModel()
 

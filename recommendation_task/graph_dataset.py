@@ -7,6 +7,7 @@ from torch_geometric.utils import negative_sampling
 from preprocessing.clean_datasets import *
 from preprocessing.clean_datasets import clean_data_path, Graph_
 from preprocessing.features_extraction import FeaturesExtraction
+from preprocessing.find_negative_edges import FindNegativeEdges
 
 
 class Dataset:
@@ -14,7 +15,7 @@ class Dataset:
     def __init__(self, device):
         self.device = device
 
-        self.day = 1
+        self.day = 0
         self.numOfGraphs = len(glob.glob(f'{clean_data_path}{Graph_}*'))
 
         # load first day graph
@@ -33,8 +34,9 @@ class Dataset:
     def _increment_day(self):
         self.day += 1
         self.max_node = torch.max(self.graph.edge_index).item()
+        self.next_day_edges = self._get_day_graph_edge_index(self.day)
         self.graph.edge_index = torch.cat([self.graph.edge_index,
-                                          self.next_day_edges], dim=1)
+                                           self.next_day_edges], dim=1)
 
 
     def _get_node_attributes(self):
@@ -47,10 +49,9 @@ class Dataset:
     def _get_day_graph_edge_index(self, day):
         # get directed edges of graph_day as tensor
         edges = pickle.load(open(f'{clean_data_path}{Graph_}{day}', 'rb')).edges()
-        return self._to_directed_edge_index(edges)
+        edges = torch.tensor(list(edges), dtype=torch.long, device=self.device).T
+        return edges
 
-    def _to_directed_edge_index(self, edges):
-        return torch.tensor(list(edges), dtype=torch.long, device=self.device).T
 
     def _to_undirected(self, edge_index):
         return torch.cat([edge_index, edge_index[[1, 0]]], dim=1)
@@ -59,11 +60,10 @@ class Dataset:
     def get_dataset(self):
 
         train_edges = self._to_undirected(self.graph.edge_index)
-
-        self.next_day_edges = self._get_day_graph_edge_index(self.day + 1)
+        test_edges = FindNegativeEdges.retrieveGraphNegatives(self.day + 1)
         self._increment_day()
 
-        return train_edges, self._to_undirected(self.next_day_edges)
+        return train_edges, test_edges
 
     def negative_sampling(self):
         neg_edge_index = negative_sampling(
