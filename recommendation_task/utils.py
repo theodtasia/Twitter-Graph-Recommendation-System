@@ -6,7 +6,6 @@ import torch_geometric
 
 
 def device():
-    return 'cpu'
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 

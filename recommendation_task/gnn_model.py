@@ -1,4 +1,5 @@
 from torch import nn, sigmoid
+from torch.nn import Linear
 from torch.nn.functional import dropout
 from torch_geometric.nn import SAGEConv, GINConv, GATConv, GCNConv
 from torch_geometric.nn.models import MLP
@@ -6,7 +7,7 @@ from torch_geometric.nn.models import MLP
 
 class GNN_model(nn.Module):
 
-    def __init__(self, in_channels, hidden_channels, n_conv_layers, conv_type, act_func):
+    def __init__(self, in_channels, hidden_channels, n_conv_layers, conv_type, act_func, decoder_layers=None):
         nn.Module.__init__(self)
 
         # conv layers
@@ -16,6 +17,16 @@ class GNN_model(nn.Module):
         for _ in range(self.n_conv_layers):
             conv = self.ConvLayer(conv_type, in_channels, hidden_channels, act_func)
             self.convs.append(conv)
+
+        if decoder_layers is not None:
+
+            self.decoder = nn.ModuleList()
+            self.decoder.append(MLP(in_channels= hidden_channels, hidden_channels=hidden_channels, out_channels=hidden_channels,
+                                num_layers=decoder_layers - 1, act=act_func.__name__, dropout=0.2))
+            self.decoder.append(Linear(in_features=hidden_channels, out_features=1))
+            self.decode = self.multilayered_decoder
+        else:
+            self.decode = self.dot_prod_decode
 
         self.act_func = act_func
 
@@ -46,9 +57,17 @@ class GNN_model(nn.Module):
 
             return x
 
-    def decode(self, z, edge_index):
+
+    def dot_prod_decode(self, z, edge_index):
         # dot product
         out = (z[edge_index[0]] * z[edge_index[1]]).sum(dim=-1)
         return out
+
+    def multilayered_decoder(self, z, edge_index):
+
+        out = z[edge_index[0]] * z[edge_index[1]]
+        for i in range(len(self.decoder)):
+            out = self.decoder[i](out)
+        return out.view(-1)
 
 

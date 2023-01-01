@@ -1,17 +1,20 @@
 import torch
-from torch import relu, binary_cross_entropy_with_logits, sigmoid
+from torch import relu, tanh
+from torch.nn import BCEWithLogitsLoss
+from torch.nn.functional import leaky_relu
 
 from recommendation_task.gnn_model import GNN_model
 from recommendation_task.graph_dataset import Dataset
 from utils import set_seed, device
 
-LR = 0.1
+LR = 0.01
 WEIGHT_DECAY = 1e-5
 HIDDEN_CHANNELS = 16
 N_CONV_LAYERS = 1
 CONV_TYPE = 'GINConv'
-ACT_FUNC = relu
-EPOCHS = 1000
+ACT_FUNC = leaky_relu
+DECODER_LAYERS = None
+EPOCHS = 100
 
 class TrainClassificationModel:
 
@@ -19,15 +22,9 @@ class TrainClassificationModel:
 
         set_seed()
         self.device = device()
-
-        self.dataset = Dataset()
-        self.model = self.recommendation_model()
-        self.model.to(self.device)
-
-        self.optimizer = torch.optim.Adam(params=self.model.parameters(), lr=LR, weight_decay=WEIGHT_DECAY)
-
+        self.dataset = Dataset(self.device)
+        self.criterion = BCEWithLogitsLoss()
         self.train_model()
-
 
 
     def recommendation_model(self):
@@ -42,6 +39,7 @@ class TrainClassificationModel:
             conv_type= CONV_TYPE,
 
             act_func=ACT_FUNC,
+            decoder_layers=DECODER_LAYERS
 
         )
 
@@ -53,48 +51,33 @@ class TrainClassificationModel:
         while self.dataset.has_next():
             print('\nDay: ', self.dataset.day)
 
-            g_train, test_edges = self.dataset.get_dataset_method2()
-            if self.dataset.day < 62:
-                continue
-            self.run_day_training_method2(g_train)
+            self.model = self.recommendation_model()
+            self.model.to(self.device)
+            self.optimizer = torch.optim.Adam(params=self.model.parameters(),
+                                              lr=LR, weight_decay=WEIGHT_DECAY)
+
+            train_edges, test_edges = self.dataset.get_dataset()
+
+            self.run_day_training(train_edges)
 
 
-    def run_day_training(self, g_train):
-
-        self.model.train()
-
-        for epoch in range(min(self.dataset.day * 10, EPOCHS)):
-
-            self.optimizer.zero_grad()
-
-            z = self.model(self.dataset.graph.x, g_train.msg_pass)
-            supervision_scores = sigmoid(self.model.decode(z, g_train.supervision))
-            negative_scores = sigmoid(self.model.decode(z, g_train.negative))
-
-            loss = - torch.log(supervision_scores + 1e-15).mean() - torch.log(1 - negative_scores + 1e-15).mean()
-
-            loss.backward()
-            self.optimizer.step()
-            print('Epoch', epoch, loss.item())
-
-
-    def run_day_training_method2(self, g_train):
+    def run_day_training(self, train_edges):
 
         self.model.train()
 
-        for epoch in range(min(self.dataset.day * 10, EPOCHS)):
+        for epoch in range(EPOCHS):
 
             self.optimizer.zero_grad()
 
-            z = self.model(self.dataset.graph.x, g_train.training)
-            supervision_scores = self.model.decode(z, g_train.training)
-            negative_scores = self.model.decode(z, g_train.negative)
-
-            link_labels = torch.tensor([1] * len(supervision_scores) + [0] * len(negative_scores), dtype=torch.float32, device=self.device)
+            z = self.model(self.dataset.graph.x, train_edges)
+            supervision_scores = self.model.decode(z, train_edges)
+            negative_edges = self.dataset.negative_sampling()
+            negative_scores = self.model.decode(z, negative_edges)
             scores = torch.cat([supervision_scores, negative_scores])
-            # print(scores.tolist()[0:10], scores.tolist()[-10:-1])
+            link_labels = torch.tensor([1] * len(supervision_scores) + [0] * len(negative_scores),
+                                       device=self.device, dtype=torch.float32)
 
-            loss = binary_cross_entropy_with_logits(scores, link_labels).mean()
+            loss = self.criterion(scores, link_labels)
 
             loss.backward()
             self.optimizer.step()
@@ -103,3 +86,4 @@ class TrainClassificationModel:
 
 
 TrainClassificationModel()
+
