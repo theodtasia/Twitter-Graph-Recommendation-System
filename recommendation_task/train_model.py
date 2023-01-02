@@ -2,7 +2,11 @@ import torch
 from torch import relu, tanh
 from torch.nn import BCEWithLogitsLoss
 from torch.nn.functional import leaky_relu
+from torchmetrics import MeanAbsoluteError
+from torchmetrics import MeanSquaredError
 from torchmetrics import RetrievalRecall
+from torchmetrics import F1Score
+
 
 from recommendation_task.gnn_model import GNN_model
 from recommendation_task.graph_dataset import Dataset
@@ -105,6 +109,11 @@ class TrainClassificationModel:
 
             for k, metric in self.metrics.items():
                 print(f'Recall@{k} = {metric(scores, test_edges.targets, indexes=test_edges.indexes)}')
+                print(f'F1 Score = {F1Score(scores, test_edges.targets, indexes=test_edges.indexes)}')
+                print(f'RMSE = {MeanSquaredError(scores, test_edges.targets, indexes=test_edges.indexes)}')
+                print(f'MAE = {MeanAbsoluteError(scores, test_edges.targets, indexes=test_edges.indexes)}')
+
+
 
 TrainClassificationModel()
 
