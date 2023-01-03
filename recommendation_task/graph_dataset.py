@@ -60,7 +60,7 @@ class Dataset:
     def get_dataset(self):
 
         train_edges = self._to_undirected(self.graph.edge_index)
-        test_edges = FindNegativeEdges.retrieveGraphNegatives(self.day + 1)
+        test_edges = FindNegativeEdges().retrieveGraphNegatives(self.day + 1)
         self._increment_day()
 
         return train_edges, test_edges

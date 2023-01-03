@@ -17,8 +17,8 @@ class FindNegativeEdges:
             print("preprocessing")
             self._preproccessing()
 
-    @staticmethod
-    def retrieveGraphNegatives(day):
+
+    def retrieveGraphNegatives(self, day):
         return dotdict(pickle.load(open(FindNegativeEdges._negativeEdgesFile(day), 'rb')))
 
     def _preproccessing(self):
