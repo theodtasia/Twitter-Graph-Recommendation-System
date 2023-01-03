@@ -3,6 +3,7 @@ import pickle
 from os import mkdir
 from os.path import exists
 
+import networkx as nx
 import torch
 
 from preprocessing.clean_datasets import CleanData, clean_data_path, Graph_
@@ -23,6 +24,7 @@ class FindNegativeEdges:
 
     def _preproccessing(self):
         self.graphs = CleanData.loadDayGraphs()
+        self.merged = nx.Graph()
 
         for day, graph in enumerate(self.graphs):
             print(day)
@@ -38,10 +40,11 @@ class FindNegativeEdges:
         targets = [1] * test_edges.shape[1]
         indexes = test_edges[0].tolist()
 
+        self.merged = nx.compose(self.merged, graph)
         negative_tests = []
         for v in graph.nodes():
             negatives = [(v, u) for u in graph.nodes()
-                         if not graph.has_edge(v, u) and not graph.has_edge(u, v)]
+                         if not self.merged.has_edge(v, u) and not self.merged.has_edge(u, v)]
             negative_tests.extend(negatives)
             targets.extend([0] * len(negatives))
             indexes.extend([v] * len(negatives))
@@ -64,3 +67,5 @@ class FindNegativeEdges:
     @staticmethod
     def _negativeEdgesFile(day):
         return f'{negativeEdges}negativeG_{day}'
+
+FindNegativeEdges()
