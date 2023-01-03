@@ -33,6 +33,11 @@ class TrainClassificationModel:
         self.criterion = BCEWithLogitsLoss()
         self.metrics = {k : RetrievalRecall(k=k) for k in at_k}
         self.results = {k : [] for k in at_k}
+
+        self.model = self.recommendation_model()
+        self.model.to(self.device)
+        self.optimizer = torch.optim.Adam(params=self.model.parameters(),
+                                          lr=LR, weight_decay=WEIGHT_DECAY)
         self.train_model()
 
 
@@ -59,12 +64,6 @@ class TrainClassificationModel:
 
         while self.dataset.has_next():
             print('\nDay: ', self.dataset.day)
-
-            self.model = self.recommendation_model()
-            self.model.to(self.device)
-            self.optimizer = torch.optim.Adam(params=self.model.parameters(),
-                                              lr=LR, weight_decay=WEIGHT_DECAY)
-
             train_edges, test_edges = self.dataset.get_dataset()
 
             self.run_day_training(train_edges)
@@ -74,6 +73,7 @@ class TrainClassificationModel:
 
     def run_day_training(self, train_edges):
 
+        self.model.to(self.device)
         self.model.train()
 
         for epoch in range(EPOCHS):
