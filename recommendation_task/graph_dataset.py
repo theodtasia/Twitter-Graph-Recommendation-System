@@ -28,7 +28,7 @@ class Dataset:
 
 
     def has_next(self):
-        return self.day < self.numOfGraphs
+        return self.day + 1 < self.numOfGraphs
 
 
     def _increment_day(self):
