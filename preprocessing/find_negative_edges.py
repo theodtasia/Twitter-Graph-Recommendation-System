@@ -67,4 +67,3 @@ class FindNegativeEdges:
     def _negativeEdgesFile(day):
         return f'{negativeEdges}negativeG_{day}'
 
-FindNegativeEdges()
