@@ -1,13 +1,8 @@
-import numpy as np
 import torch
 from matplotlib import pyplot as plt
-from torch import relu, tanh
 from torch.nn import BCEWithLogitsLoss
 from torch.nn.functional import leaky_relu
-from torchmetrics import MeanAbsoluteError
-from torchmetrics import MeanSquaredError
-from torchmetrics import RetrievalRecall
-from torchmetrics import F1Score
+from torchmetrics import RetrievalRecall, RetrievalPrecision
 
 from recommendation_task.gnn_model import GNN_model
 from recommendation_task.graph_dataset import Dataset
@@ -31,8 +26,8 @@ class TrainClassificationModel:
         self.device = device()
         self.dataset = Dataset(self.device)
         self.criterion = BCEWithLogitsLoss()
-        self.metrics = {k : RetrievalRecall(k=k) for k in at_k}
-        self.results = {k : [] for k in at_k}
+        self.metrics = [{k : (metric(k=k), []) for k in at_k}
+                        for metric in [RetrievalRecall, RetrievalPrecision]]
 
         self.model = self.recommendation_model()
         self.model.to(self.device)
@@ -110,22 +105,23 @@ class TrainClassificationModel:
             z = self.model(x, train_edges)
             scores = self.model.decode(z, test_edges.test_edges)
 
-            for k, metric in self.metrics.items():
-                result = metric(scores, test_edges.targets, indexes=test_edges.indexes)
-                self.results[k].append(result)
-                print(f'Recall@{k} = {result}')
+            for metric_at_k in self.metrics:
+                for k, (metric_func, results_list) in metric_at_k.items():
+                    result = metric_func(scores, test_edges.targets, indexes=test_edges.indexes)
+                    results_list.append(result)
 
-                # print(f'F1 Score = {F1Score(scores, test_edges.targets, indexes=test_edges.indexes)}')
-                # print(f'RMSE = {MeanSquaredError(scores, test_edges.targets, indexes=test_edges.indexes)}')
-                # print(f'MAE = {MeanAbsoluteError(scores, test_edges.targets, indexes=test_edges.indexes)}')
+                    print(f'{metric_func.__class__.__name__}@{k} = {result}')
+
 
     def plot_results(self):
 
-        for k, results in self.results.items():
-            days = range(len(results))
-            plt.plot(days, results, label=f'Recall@{k}')
-        plt.legend(loc='upper left')
-        plt.show()
+        for metric_at_k in self.metrics:
+            for k, (metric_func, results_list) in metric_at_k.items():
+                days = range(len(results_list))
+                plt.plot(days, results_list, label=f'{metric_func.__class__.__name__}@{k}')
+
+            plt.legend(loc='upper left')
+            plt.show()
 
 TrainClassificationModel()
 
