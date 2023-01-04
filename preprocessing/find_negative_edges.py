@@ -35,7 +35,6 @@ class FindNegativeEdges:
     def _dayGraph_negativeEdges(self, graph):
 
         test_edges = torch.tensor(list(graph.edges()), dtype=torch.long).T
-        test_edges = torch.cat([test_edges, test_edges[[1, 0]]], dim=1)
 
         targets = [1] * test_edges.shape[1]
         indexes = test_edges[0].tolist()
@@ -44,7 +43,7 @@ class FindNegativeEdges:
         negative_tests = []
         for v in graph.nodes():
             negatives = [(v, u) for u in graph.nodes()
-                         if not self.merged.has_edge(v, u) and not self.merged.has_edge(u, v)]
+                         if v < u and not self.merged.has_edge(v, u) and not self.merged.has_edge(u, v)]
             negative_tests.extend(negatives)
             targets.extend([0] * len(negatives))
             indexes.extend([v] * len(negatives))
@@ -68,3 +67,4 @@ class FindNegativeEdges:
     def _negativeEdgesFile(day):
         return f'{negativeEdges}negativeG_{day}'
 
+FindNegativeEdges()
