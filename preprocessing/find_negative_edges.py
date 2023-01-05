@@ -19,7 +19,7 @@ class FindNegativeEdges:
             self._preproccessing()
 
 
-    def retrieveGraphNegatives(self, day):
+    def loadTestEdges(self, day):
         return dotdict(pickle.load(open(FindNegativeEdges._negativeEdgesFile(day), 'rb')))
 
     def _preproccessing(self):

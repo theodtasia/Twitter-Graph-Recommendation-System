@@ -58,8 +58,10 @@ class TrainClassificationModel:
     def train_model(self):
 
         while self.dataset.has_next():
-            print('\nDay: ', self.dataset.day)
+
             train_edges, test_edges = self.dataset.get_dataset()
+
+            print('\nDay: ', self.dataset.day)
 
             self.run_day_training(train_edges)
             self.test_on_next_day_graph(train_edges, test_edges)
@@ -75,17 +77,21 @@ class TrainClassificationModel:
 
             self.optimizer.zero_grad()
 
+            # update node embeddings (apply gnn) according to existing edges
             z = self.model(self.dataset.graph.x, train_edges)
-            supervision_scores = self.model.decode(z, train_edges)
+            # positive (existing) edges scores
+            positives = self.model.decode(z, train_edges)
 
-            negative_edges = self.dataset.negative_sampling()
-            negative_scores = self.model.decode(z, negative_edges)
+            # undirected edge_index tensor. sample new negative edges per epoch
+            negatives = self.dataset.negative_sampling()
+            # negative edges (samples) scores
+            negatives = self.model.decode(z, negatives)
 
-            scores = torch.cat([supervision_scores, negative_scores])
-            link_labels = torch.tensor([1] * len(supervision_scores) + [0] * len(negative_scores),
+            link_labels = torch.tensor([1] * len(positives) + [0] * len(negatives),
                                        device=self.device, dtype=torch.float32)
 
-            loss = self.criterion(scores, link_labels)
+            loss = self.criterion(torch.cat([positives, negatives]),
+                                  link_labels)
 
             loss.backward()
             self.optimizer.step()
@@ -102,9 +108,12 @@ class TrainClassificationModel:
             x = self.dataset.graph.x.to('cpu')
             train_edges = train_edges.to('cpu')
 
+            # update node embeddings (apply gnn) according to existing edges
             z = self.model(x, train_edges)
+            # predict/score next day's edges (positives and all negatives)
             scores = self.model.decode(z, test_edges.test_edges)
 
+            # evaluation metrics
             for metric_at_k in self.metrics:
                 for k, (metric_func, results_list) in metric_at_k.items():
                     result = metric_func(scores, test_edges.targets, indexes=test_edges.indexes)
