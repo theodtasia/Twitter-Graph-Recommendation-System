@@ -29,6 +29,7 @@ class TrainClassificationModel:
         self.metrics = [{k : (metric(k=k), []) for k in at_k}
                         for metric in [RetrievalRecall, RetrievalPrecision]]
 
+        # train the same (continuously) model every day = don't reset daily
         self.model = self.recommendation_model()
         self.model.to(self.device)
         self.optimizer = torch.optim.Adam(params=self.model.parameters(),

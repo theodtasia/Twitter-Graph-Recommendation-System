@@ -35,10 +35,15 @@ class Dataset:
 
 
     def get_dataset(self):
+        """
+        :return:
+            train_edges : positive (existing) edges for message passing and scoring (undirected tensor (2,M))
+            test_edges : next day's edges (positive and negative) for testing.
+                dotdict {test_edges : tensor (2, N), targets, indexes : tensors (N, 1)}
+        """
         self._set_day()
         train_edges = self._to_undirected(self.graph.edge_index)
         test_edges = FindNegativeEdges().loadTestEdges(self.day + 1)
-
         return train_edges, test_edges
 
 
@@ -52,6 +57,8 @@ class Dataset:
 
 
     def _update_node_attributes(self):
+        # load feature vector x for the first day, or update daily if centrality based feats are included
+        # if not, do nothing (x stays as it is every day)
         if self.day == INIT_DAY or EXTRACT_TOPOL_ATTRS:
             # dataframe
             x = self.featureExtractor.updated_topological_attrs(self.nxDayGraph) if EXTRACT_TOPOL_ATTRS \
@@ -63,9 +70,12 @@ class Dataset:
 
 
     def _load_day_graph(self, day):
-        # nx.Graph object
+        """
+        :param day: to load Graph_{day}
+        :return: nxDayGraph : nx.Graph object
+                 day_edges : directed edge_index tensor
+        """
         nxDayGraph = pickle.load(open(f'{clean_data_path}{Graph_}{day}', 'rb'))
-        # directed edge_index tensor
         day_edges = torch.tensor(list(nxDayGraph.edges()), dtype=torch.long, device=self.device).T
 
         return nxDayGraph, day_edges
