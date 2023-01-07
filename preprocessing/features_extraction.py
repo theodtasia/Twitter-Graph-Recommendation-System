@@ -146,7 +146,7 @@ class FeaturesExtraction:
 
     def __turn_to_numeric(self):
         self.attributes['verified'] = self.attributes['verified'].astype(int)
-        self.attributes = pd.get_dummies(self.attributes, prefix=['party'], columns=['party'], drop_first=True)
+        self.attributes = pd.get_dummies(self.attributes, prefix=['party'], columns=['party'])
 
     def __scale(self):
         scaler = StandardScaler()
