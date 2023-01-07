@@ -21,7 +21,7 @@ class FeaturesExtraction:
                        load_from_file = True,
                        extract_stats_based_attr=True,
                        turn_to_numeric=True,
-                       scale=True):
+                       scale=False):
 
         self.load_from_file = load_from_file
 
