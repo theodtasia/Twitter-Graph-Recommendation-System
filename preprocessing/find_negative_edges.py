@@ -7,14 +7,13 @@ import networkx as nx
 import torch
 
 from preprocessing.clean_datasets import CleanData, clean_data_path, Graph_
-from recommendation_task.utils import dotdict
+from recommendation_task.utils import dotdict, numOfGraphs
 
 negativeEdges = f'{clean_data_path}negative_edges/'
 class FindNegativeEdges:
 
     def __init__(self):
-        numOfGraphs = len(glob.glob(f'{clean_data_path}{Graph_}*'))
-        if not exists(negativeEdges) or not exists(FindNegativeEdges._negativeEdgesFile(numOfGraphs - 1)):
+        if not exists(negativeEdges) or not exists(FindNegativeEdges._negativeEdgesFile(numOfGraphs() - 1)):
             print("preprocessing")
             self._preproccessing()
 

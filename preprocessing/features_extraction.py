@@ -1,4 +1,6 @@
 import pickle
+from os import mkdir
+from os.path import exists
 
 import networkx as nx
 import numpy as np
@@ -6,6 +8,9 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
 from preprocessing.clean_datasets import CleanData, clean_data_path, Graph_
+from recommendation_task.utils import numOfGraphs
+
+DAY_NODE_ATTRS_PATH = f'{clean_data_path}node_attrs_per_day/'
 
 # TODO temporary solution to init gnn in_channels parameter
 NUMBER_OF_TOPOLOGICAL_ATTRIBUTES = 5
@@ -13,10 +18,38 @@ NUMBER_OF_TOPOLOGICAL_ATTRIBUTES = 5
 class FeaturesExtraction:
 
     def __init__(self, extract_topological_attr,
+                       load_from_file = True,
                        extract_stats_based_attr=True,
                        turn_to_numeric=True,
                        scale=True):
 
+        self.load_from_file = load_from_file
+
+        # if doesn't want to load saved node attributes (or save files not found)
+        # or don't extract topological attributes (therefore saving not required)
+        if not load_from_file or not exists(DAY_NODE_ATTRS_PATH[:-1]) \
+            or not extract_topological_attr \
+            or not exists(FeaturesExtraction._nodeAttributesFile(numOfGraphs())):
+
+            self.__run_feature_extraction(extract_stats_based_attr, turn_to_numeric, scale)
+            if extract_topological_attr:
+                self.attr_dim += NUMBER_OF_TOPOLOGICAL_ATTRIBUTES  # TODO temporary solution
+                # save node attributes per day graph as a pd csv file
+                self._save_attributes_per_day()
+
+        else:
+            self.attr_dim = len(self.loadDayAttributesDataframe(0).columns)
+
+
+    def loadDayAttributesDataframe(self, day):
+        if self.load_from_file:
+            # files are already created by the constructor, therefore simply read and return
+            # day graph node attributes
+            return pd.read_csv(FeaturesExtraction._nodeAttributesFile(day))
+        else:
+            return self.attributes
+
+    def __run_feature_extraction(self, extract_stats_based_attr, turn_to_numeric, scale):
         # read from node_attributes file (dictionary)
         self.attributes = CleanData.readNodeAttributes()
         self.attributes = self.turn_to_dataframe(self.attributes)
@@ -31,10 +64,23 @@ class FeaturesExtraction:
 
         # feature vector dimension
         self.attr_dim = len(self.attributes.columns)
-        # TODO temporary solution
-        if extract_topological_attr:
-            self.attr_dim += NUMBER_OF_TOPOLOGICAL_ATTRIBUTES
 
+
+    def _save_attributes_per_day(self):
+        if not exists(DAY_NODE_ATTRS_PATH[:-1]):
+            mkdir(DAY_NODE_ATTRS_PATH[:-1])
+
+        graphs = CleanData.loadDayGraphs()
+        for day, graph in enumerate(graphs):
+            print(day)
+            file = FeaturesExtraction._nodeAttributesFile(day)
+
+            self.updated_topological_attrs(graph) \
+                .to_csv(file, sep=',', encoding='utf-8', index=False)
+
+    @staticmethod
+    def _nodeAttributesFile(day):
+        return f'{DAY_NODE_ATTRS_PATH}nodeAttrsG_{day}.csv'
 
     def updated_topological_attrs(self, nxDayGraph):
         # TODO should scale ?
@@ -45,7 +91,7 @@ class FeaturesExtraction:
             self.current_graph = nx.compose(self.current_graph, nxDayGraph)
         else:
             self.current_graph = nxDayGraph
-        print("\nUpdate topological feats according to ", self.current_graph)
+        print("Update topological feats according to ", self.current_graph)
         self.__extract_topological_attributes()
         return self.attributes
 
@@ -108,24 +154,3 @@ class FeaturesExtraction:
             scaler.fit_transform(self.attributes[self.attributes.columns])
 
 
-# For testing
-"""
-pd.set_option('display.max_rows', 500)
-pd.set_option('display.max_columns', 500)
-pd.set_option('display.width', 1000)
-# load initial features, stats based features, turn to num and scale
-fextr = FeaturesExtraction(extract_topological_attr=True)
-
-day = 0
-graph_0 = pickle.load(open(f'{clean_data_path}{Graph_}{day}', 'rb'))
-# according to the edges of graph_0 calculate centrality based feats
-fextr.updated_topological_attrs(graph_0)
-print(fextr.attributes.head())
-
-day = 1
-graph_1 = pickle.load(open(f'{clean_data_path}{Graph_}{day}', 'rb'))
-# since 0 and 1 edge sets don't overlap
-# new current_day_graph = merged (graph_0, graph_1)
-fextr.updated_topological_attrs(graph_1)
-print(fextr.attributes.head())
-"""

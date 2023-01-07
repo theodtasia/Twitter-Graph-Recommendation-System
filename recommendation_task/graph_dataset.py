@@ -1,5 +1,3 @@
-import glob
-
 import torch
 from torch_geometric.data import Data
 from torch_geometric.utils import negative_sampling
@@ -8,11 +6,15 @@ from preprocessing.clean_datasets import *
 from preprocessing.clean_datasets import clean_data_path, Graph_
 from preprocessing.features_extraction import FeaturesExtraction
 from preprocessing.find_negative_edges import FindNegativeEdges
+from recommendation_task.utils import numOfGraphs
 
 
 INIT_DAY = 0
 # change to True to include centrality based feats
-EXTRACT_TOPOL_ATTRS = False
+EXTRACT_TOPOL_ATTRS = True
+# feature extractor configuration (for ex, scale arg value) haven't changed
+# since last run
+SAME_ATTRS_CONFIG = True
 
 class Dataset:
 
@@ -21,9 +23,10 @@ class Dataset:
 
         # will be incremented to 0 when thw first graph (Graph_{INIT_DAY}) is loaded
         self.day = INIT_DAY - 1
-        self.numOfGraphs = len(glob.glob(f'{clean_data_path}{Graph_}*'))
+        self.numOfGraphs = numOfGraphs()
 
-        self.featureExtractor = FeaturesExtraction(extract_topological_attr=EXTRACT_TOPOL_ATTRS)
+        self.featureExtractor = FeaturesExtraction(extract_topological_attr=EXTRACT_TOPOL_ATTRS,
+                                                   load_from_file= SAME_ATTRS_CONFIG)
         self.attr_dim = self.featureExtractor.attr_dim
 
         self.graph = Data(edge_index=torch.empty((2,0), dtype=torch.long, device=device))
@@ -49,7 +52,7 @@ class Dataset:
 
     def _set_day(self):
         self.day += 1
-        self.nxDayGraph, day_edges = self._load_day_graph(self.day)
+        day_edges = self._load_day_graph(self.day)
         self.graph.edge_index = torch.cat([self.graph.edge_index,
                                            day_edges], dim=1)
         self.max_node = torch.max(self.graph.edge_index).item()
@@ -61,9 +64,7 @@ class Dataset:
         # if not, do nothing (x stays as it is every day)
         if self.day == INIT_DAY or EXTRACT_TOPOL_ATTRS:
             # dataframe
-            x = self.featureExtractor.updated_topological_attrs(self.nxDayGraph) if EXTRACT_TOPOL_ATTRS \
-                else self.featureExtractor.attributes
-
+            x = self.featureExtractor.loadDayAttributesDataframe(self.day)
             x = x.values.tolist()
             x = torch.tensor(x, device=self.device, dtype=torch.float32)
             self.graph.x = x
@@ -72,13 +73,11 @@ class Dataset:
     def _load_day_graph(self, day):
         """
         :param day: to load Graph_{day}
-        :return: nxDayGraph : nx.Graph object
-                 day_edges : directed edge_index tensor
+        :return: edges : directed edge_index tensor
         """
-        nxDayGraph = pickle.load(open(f'{clean_data_path}{Graph_}{day}', 'rb'))
-        day_edges = torch.tensor(list(nxDayGraph.edges()), dtype=torch.long, device=self.device).T
-
-        return nxDayGraph, day_edges
+        edges = pickle.load(open(f'{clean_data_path}{Graph_}{day}', 'rb')).edges()
+        edges = torch.tensor(list(edges), dtype=torch.long, device=self.device).T
+        return edges
 
 
     def _to_undirected(self, edge_index):
