@@ -19,9 +19,7 @@ class FeaturesExtraction:
 
     def __init__(self, extract_topological_attr,
                        load_from_file = True,
-                       extract_stats_based_attr=True,
-                       turn_to_numeric=True,
-                       scale=False):
+                       extract_stats_based_attr=True):
 
         self.load_from_file = load_from_file
 
@@ -31,11 +29,14 @@ class FeaturesExtraction:
             or not extract_topological_attr \
             or not exists(FeaturesExtraction._nodeAttributesFile(numOfGraphs())):
 
-            self.__run_feature_extraction(extract_stats_based_attr, turn_to_numeric, scale)
+            self.__run_feature_extraction(extract_stats_based_attr)
             if extract_topological_attr:
                 self.attr_dim += NUMBER_OF_TOPOLOGICAL_ATTRIBUTES  # TODO temporary solution
                 # save node attributes per day graph as a pd csv file
+                self.current_graph = nx.Graph()
                 self._save_attributes_per_day()
+            else:
+                self.load_from_file = False
 
         else:
             self.attr_dim = len(self.loadDayAttributesDataframe(0).columns)
@@ -45,22 +46,19 @@ class FeaturesExtraction:
         if self.load_from_file:
             # files are already created by the constructor, therefore simply read and return
             # day graph node attributes
-            return pd.read_csv(FeaturesExtraction._nodeAttributesFile(day))
-        else:
-            return self.attributes
+            self.attributes = pd.read_csv(FeaturesExtraction._nodeAttributesFile(day))
+        self.__scale()
+        return self.attributes
 
-    def __run_feature_extraction(self, extract_stats_based_attr, turn_to_numeric, scale):
+
+    def __run_feature_extraction(self, extract_stats_based_attr):
         # read from node_attributes file (dictionary)
         self.attributes = CleanData.readNodeAttributes()
         self.attributes = self.turn_to_dataframe(self.attributes)
 
         if extract_stats_based_attr:
             self.__extract_stats_based_attributes()
-        if turn_to_numeric:
-            self.__turn_to_numeric()
-        if scale:
-            self.__scale()
-        self.current_graph = nx.Graph()
+        self.__turn_to_numeric()
 
         # feature vector dimension
         self.attr_dim = len(self.attributes.columns)
@@ -149,8 +147,12 @@ class FeaturesExtraction:
         self.attributes = pd.get_dummies(self.attributes, prefix=['party'], columns=['party'])
 
     def __scale(self):
+        # don't scale the following features:
+        columns = ['clustering', 'degree_centrality', 'closeness', 'betweeness', 'pr', 'verified'] \
+                  + [f'party_{p}' for p in ['left', 'right', 'neutral', 'middle']]
+        columns = self.attributes.columns.difference(columns)
         scaler = StandardScaler()
-        self.attributes[self.attributes.columns] = \
-            scaler.fit_transform(self.attributes[self.attributes.columns])
+        self.attributes[columns] = \
+            scaler.fit_transform(self.attributes[columns])
 
 
