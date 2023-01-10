@@ -47,7 +47,7 @@ class FindNegativeEdges:
             indexes.extend([v] * len(negatives))
 
         test_edges = {
-            'test_edges': torch.cat([test_edges, torch.tensor(negative_tests, dtype=torch.long).T],
+            'edges': torch.cat([test_edges, torch.tensor(negative_tests, dtype=torch.long).T],
                                     dim=1),
             'targets': torch.tensor(targets, dtype=torch.bool),
             'indexes': torch.tensor(indexes, dtype=torch.long)
