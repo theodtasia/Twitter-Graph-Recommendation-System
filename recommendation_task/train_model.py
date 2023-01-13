@@ -6,7 +6,7 @@ from torchmetrics import RetrievalRecall, RetrievalPrecision
 
 from recommendation_task.gnn_model import GNN_model
 from recommendation_task.graph_dataset import Dataset
-from other.FILE_PATHS import EDGE_ATTRIBUTES_DIM
+from other.handle_files import EDGE_ATTRIBUTES_DIM
 from other.utils import set_seed, device
 
 LR = 0.01

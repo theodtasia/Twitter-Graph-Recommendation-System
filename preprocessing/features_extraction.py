@@ -7,8 +7,7 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
 from preprocessing.clean_datasets import CleanData
-from other.FILE_PATHS import DAY_NODE_ATTRS_PATH
-from other.utils import numOfGraphs
+from other.handle_files import DAY_NODE_ATTRS_PATH, numOfGraphs
 
 
 class FeaturesExtraction:
@@ -50,8 +49,6 @@ class FeaturesExtraction:
 
 
     def _save_attributes_per_day(self, day_limit):
-        if not exists(DAY_NODE_ATTRS_PATH[:-1]):
-            mkdir(DAY_NODE_ATTRS_PATH[:-1])
 
         graphs = CleanData.loadDayGraphs()
         merged_graph = nx.Graph()

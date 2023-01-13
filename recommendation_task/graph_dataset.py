@@ -5,10 +5,10 @@ from torch_geometric.data import Data
 from torch_geometric.utils import negative_sampling
 
 from preprocessing.clean_datasets import *
-from other.FILE_PATHS import CLEAN_DATA_PATH, Graph_, DAY_NODE_ATTRS_PATH, EDGE_ATTRIBUTES_PATH
+from other.handle_files import CLEAN_DATA_PATH, Graph_, DAY_NODE_ATTRS_PATH, EDGE_ATTRIBUTES_PATH, numOfGraphs
 from preprocessing.features_extraction import FeaturesExtraction
 from preprocessing.edge_handler import EdgeHandler
-from other.utils import numOfGraphs, dotdict
+from other.utils import dotdict
 
 INIT_DAY = 0
 

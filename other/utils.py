@@ -1,11 +1,8 @@
-import glob
 import random
 
 import numpy as np
 import torch
 import torch_geometric
-
-from other.FILE_PATHS import CLEAN_DATA_PATH, Graph_
 
 
 def device():
@@ -23,9 +20,6 @@ def set_seed():
 
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
-
-def numOfGraphs():
-    return len(glob.glob(f'{CLEAN_DATA_PATH}{Graph_}*'))
 
 
 class dotdict(dict):

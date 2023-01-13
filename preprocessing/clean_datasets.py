@@ -1,11 +1,10 @@
 import pickle
-from os import mkdir, scandir
-from os.path import exists
+from os import scandir
 
 import networkx as nx
 from networkx import relabel_nodes, write_gpickle
 
-from other.FILE_PATHS import ORIGINAL_DATA_PATH, CLEAN_DATA_PATH, Graph_
+from other.handle_files import ORIGINAL_DATA_PATH, CLEAN_DATA_PATH, Graph_
 
 
 class CleanData:
@@ -43,9 +42,6 @@ class CleanData:
         return pickle.load(open(path, 'rb'))
 
     def saveToPickle(self):
-        if not exists(CLEAN_DATA_PATH[:-1]):
-            mkdir(CLEAN_DATA_PATH[:-1])
-            mkdir(CLEAN_DATA_PATH + 'day_graphs')
         with open(CLEAN_DATA_PATH + 'node_attributes', 'wb') as f:
             pickle.dump(self.node_attributes, f)
         for i, graph in enumerate(self.graphs):

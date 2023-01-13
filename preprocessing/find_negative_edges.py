@@ -6,8 +6,8 @@ import networkx as nx
 import torch
 
 from preprocessing.clean_datasets import CleanData
-from other.FILE_PATHS import CLEAN_DATA_PATH
-from other.utils import dotdict, numOfGraphs
+from other.handle_files import CLEAN_DATA_PATH, numOfGraphs
+from other.utils import dotdict
 
 negativeEdges = f'{CLEAN_DATA_PATH}negative_edges/'
 class FindNegativeEdges:

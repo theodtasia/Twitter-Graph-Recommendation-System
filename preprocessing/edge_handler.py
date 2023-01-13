@@ -5,7 +5,7 @@ import networkx as nx
 import torch
 
 from preprocessing.clean_datasets import CleanData
-from other.FILE_PATHS import TEST_EDGES_PATH, EDGE_ATTRIBUTES_PATH
+from other.handle_files import TEST_EDGES_PATH, EDGE_ATTRIBUTES_PATH
 from other.utils import dotdict
 
 
