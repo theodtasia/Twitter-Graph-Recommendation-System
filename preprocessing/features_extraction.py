@@ -15,29 +15,20 @@ class FeaturesExtraction:
 
     def __init__(self, args):
 
-        self.load_from_file = load_from_file
+        self.__run_feature_extraction(args.use_stats_based_attr)
 
-        # if doesn't want to load saved node attributes (or save files not found)
-        # or don't extract topological attributes (therefore saving not required)
-        if not load_from_file or not exists(DAY_NODE_ATTRS_PATH[:-1]) \
-            or not extract_topological_attr \
-            or not exists(FeaturesExtraction._nodeAttributesFile(numOfGraphs())):
+        self.use_topological_node_attrs = args.use_topological_node_attrs
 
-            self.__run_feature_extraction(extract_stats_based_attr)
-            if extract_topological_attr:
-                self.attr_dim += NUMBER_OF_TOPOLOGICAL_ATTRIBUTES
-                # save node attributes per day graph as a pd csv file
-                self.current_graph = nx.Graph()
-                self._save_attributes_per_day()
-            else:
-                self.load_from_file = False
+        if args.use_topological_node_attrs:
+            self.attr_dim += args.topological_attrs_dim
 
-        else:
-            self.attr_dim = len(self.loadDayAttributesDataframe(0).columns)
+        if args.rerun_topological_node_attrs:
+            self._save_attributes_per_day(args.rerun_topological_node_attrs_day_limit)
+
 
 
     def loadDayAttributesDataframe(self, day):
-        if self.load_from_file:
+        if self.use_topological_node_attrs:
             # files are already created by the constructor, therefore simply read and return
             # day graph node attributes
             self.attributes = pd.read_csv(FeaturesExtraction._nodeAttributesFile(day))
@@ -58,31 +49,26 @@ class FeaturesExtraction:
         self.attr_dim = len(self.attributes.columns)
 
 
-    def _save_attributes_per_day(self):
+    def _save_attributes_per_day(self, day_limit):
         if not exists(DAY_NODE_ATTRS_PATH[:-1]):
             mkdir(DAY_NODE_ATTRS_PATH[:-1])
 
         graphs = CleanData.loadDayGraphs()
+        merged_graph = nx.Graph()
+
         for day, graph in enumerate(graphs):
+            if day_limit < day:
+                return
+
             print(day)
+            merged_graph = nx.compose(merged_graph, graph)
+            print("Update topological feats according to ", merged_graph)
+
             file = FeaturesExtraction._nodeAttributesFile(day)
+            if not exists(file):
+                self.__extract_topological_attributes(merged_graph)
+                self.attributes.to_csv(file, sep=',', encoding='utf-8', index=False)
 
-            self.updated_topological_attrs(graph) \
-                .to_csv(file, sep=',', encoding='utf-8', index=False)
-
-
-
-    def updated_topological_attrs(self, nxDayGraph):
-        # nxDayGraph a nx.Graph object made up of next (only) day's edges
-        # Gt doesn't overlap with G0...t-1 => merge current with next day's graph to
-        # have the full graph and calc centrality measures
-        if len(self.current_graph.nodes()) > 0 :
-            self.current_graph = nx.compose(self.current_graph, nxDayGraph)
-        else:
-            self.current_graph = nxDayGraph
-        print("Update topological feats according to ", self.current_graph)
-        self.__extract_topological_attributes()
-        return self.attributes
 
 
     def turn_to_dataframe(self, attributes):
@@ -122,20 +108,22 @@ class FeaturesExtraction:
         self.attributes.drop(['tweets_per_party_number', 'lists_per_party_number'], axis=1, inplace=True)
 
 
-    def __extract_topological_attributes(self):
-        self.attributes['clustering'] = pd.Series(nx.clustering(self.current_graph))
-        self.attributes['degree_centrality'] = pd.Series(nx.degree_centrality(self.current_graph))
-        self.attributes['closeness'] = pd.Series(nx.closeness_centrality(self.current_graph))
-        self.attributes['betweeness'] = pd.Series(nx.betweenness_centrality(self.current_graph))
+    def __extract_topological_attributes(self, merged_graph):
+        self.attributes['clustering'] = pd.Series(nx.clustering(merged_graph))
+        self.attributes['degree_centrality'] = pd.Series(nx.degree_centrality(merged_graph))
+        self.attributes['closeness'] = pd.Series(nx.closeness_centrality(merged_graph))
+        self.attributes['betweeness'] = pd.Series(nx.betweenness_centrality(merged_graph))
         # TODO  raises networkx.exception.PowerIterationFailedConvergence: (PowerIterationFailedConvergence(...),
         # TODO 'power iteration failed to converge within 1000 iterations')
         # self.attributes['katz_centrality'] = pd.Series(nx.katz_centrality(self.current_graph))
-        self.attributes['pr'] = pd.Series(nx.pagerank(self.current_graph))
+        self.attributes['pr'] = pd.Series(nx.pagerank(merged_graph))
         self.attributes.replace(np.nan, 0, inplace=True)
+
 
     def __turn_to_numeric(self):
         self.attributes['verified'] = self.attributes['verified'].astype(int)
         self.attributes = pd.get_dummies(self.attributes, prefix=['party'], columns=['party'])
+
 
     def __scale(self):
         # don't scale the following features:
