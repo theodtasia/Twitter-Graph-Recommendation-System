@@ -11,7 +11,7 @@ from recommendation_task.utils import numOfGraphs
 
 INIT_DAY = 0
 # change to True to include centrality based feats
-EXTRACT_TOPOL_ATTRS = True
+EXTRACT_TOPOL_ATTRS = False
 # feature extractor configuration (for ex, scale arg value) haven't changed
 # since last run
 SAME_ATTRS_CONFIG = True
@@ -68,6 +68,7 @@ class Dataset:
             x = x.values.tolist()
             x = torch.tensor(x, device=self.device, dtype=torch.float32)
             self.graph.x = x
+
 
 
     def _load_day_graph(self, day):
