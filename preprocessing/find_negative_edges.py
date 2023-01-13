@@ -1,4 +1,3 @@
-import glob
 import pickle
 from os import mkdir
 from os.path import exists
@@ -6,10 +5,11 @@ from os.path import exists
 import networkx as nx
 import torch
 
-from preprocessing.clean_datasets import CleanData, clean_data_path, Graph_
-from recommendation_task.utils import dotdict, numOfGraphs
+from preprocessing.clean_datasets import CleanData
+from other.FILE_PATHS import CLEAN_DATA_PATH
+from other.utils import dotdict, numOfGraphs
 
-negativeEdges = f'{clean_data_path}negative_edges/'
+negativeEdges = f'{CLEAN_DATA_PATH}negative_edges/'
 class FindNegativeEdges:
 
     def __init__(self):

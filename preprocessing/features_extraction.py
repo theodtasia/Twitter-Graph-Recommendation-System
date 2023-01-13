@@ -1,4 +1,3 @@
-import pickle
 from os import mkdir
 from os.path import exists
 
@@ -7,19 +6,14 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
-from preprocessing.clean_datasets import CleanData, clean_data_path, Graph_
-from recommendation_task.utils import numOfGraphs
+from preprocessing.clean_datasets import CleanData
+from other.FILE_PATHS import DAY_NODE_ATTRS_PATH
+from other.utils import numOfGraphs
 
-DAY_NODE_ATTRS_PATH = f'{clean_data_path}node_attrs_per_day/'
-
-# TODO temporary solution to init gnn in_channels parameter
-NUMBER_OF_TOPOLOGICAL_ATTRIBUTES = 5
 
 class FeaturesExtraction:
 
-    def __init__(self, extract_topological_attr,
-                       load_from_file = True,
-                       extract_stats_based_attr=True):
+    def __init__(self, args):
 
         self.load_from_file = load_from_file
 
@@ -31,7 +25,7 @@ class FeaturesExtraction:
 
             self.__run_feature_extraction(extract_stats_based_attr)
             if extract_topological_attr:
-                self.attr_dim += NUMBER_OF_TOPOLOGICAL_ATTRIBUTES  # TODO temporary solution
+                self.attr_dim += NUMBER_OF_TOPOLOGICAL_ATTRIBUTES
                 # save node attributes per day graph as a pd csv file
                 self.current_graph = nx.Graph()
                 self._save_attributes_per_day()
@@ -76,12 +70,9 @@ class FeaturesExtraction:
             self.updated_topological_attrs(graph) \
                 .to_csv(file, sep=',', encoding='utf-8', index=False)
 
-    @staticmethod
-    def _nodeAttributesFile(day):
-        return f'{DAY_NODE_ATTRS_PATH}nodeAttrsG_{day}.csv'
+
 
     def updated_topological_attrs(self, nxDayGraph):
-        # TODO should scale ?
         # nxDayGraph a nx.Graph object made up of next (only) day's edges
         # Gt doesn't overlap with G0...t-1 => merge current with next day's graph to
         # have the full graph and calc centrality measures
@@ -156,3 +147,7 @@ class FeaturesExtraction:
             scaler.fit_transform(self.attributes[columns])
 
 
+
+    @staticmethod
+    def _nodeAttributesFile(day):
+        return f'{DAY_NODE_ATTRS_PATH}nodeAttrsG_{day}.csv'

@@ -6,7 +6,8 @@ from torchmetrics import RetrievalRecall, RetrievalPrecision
 
 from recommendation_task.gnn_model import GNN_model
 from recommendation_task.graph_dataset import Dataset
-from utils import set_seed, device
+from other.FILE_PATHS import EDGE_ATTRIBUTES_DIM
+from other.utils import set_seed, device
 
 LR = 0.01
 WEIGHT_DECAY = 1e-5
@@ -14,7 +15,9 @@ HIDDEN_CHANNELS = 16
 N_CONV_LAYERS = 1
 CONV_TYPE = 'GINConv'
 ACT_FUNC = leaky_relu
-DECODER_LAYERS = None
+DECODER_LAYERS = 2
+# to not use edge attributes set to 0  instead
+EDGE_ATTRIBUTES_DIMEN = EDGE_ATTRIBUTES_DIM
 EPOCHS = 100
 at_k = [10, 20]
 
@@ -49,8 +52,8 @@ class TrainClassificationModel:
             conv_type= CONV_TYPE,
 
             act_func=ACT_FUNC,
-            decoder_layers=DECODER_LAYERS
-
+            decoder_layers=DECODER_LAYERS,
+            edge_attributes_dim=EDGE_ATTRIBUTES_DIMEN
         )
 
 
@@ -79,14 +82,15 @@ class TrainClassificationModel:
             self.optimizer.zero_grad()
 
             # update node embeddings (apply gnn) according to existing edges
-            z = self.model(self.dataset.graph.x, train_edges)
+            z = self.model(self.dataset.graph.x, train_edges.edges)
             # positive (existing) edges scores
-            positives = self.model.decode(z, train_edges)
+            positives = self.model.decode(z, train_edges.edges, train_edges.attributes)
 
-            # undirected edge_index tensor. sample new negative edges per epoch
+            # negatives.edges : undirected edge_index tensor. sample new negative edges per epoch
+            # negatives.attributes : tensor (# negatives, edge attributes dim)
             negatives = self.dataset.negative_sampling()
             # negative edges (samples) scores
-            negatives = self.model.decode(z, negatives)
+            negatives = self.model.decode(z, negatives.edges, negatives.attributes)
 
             link_labels = torch.tensor([1] * len(positives) + [0] * len(negatives),
                                        device=self.device, dtype=torch.float32)
@@ -107,12 +111,12 @@ class TrainClassificationModel:
             # perform evaluation on cpu to avoid cuda.OutOfMemoryError
             self.model = self.model.to('cpu')
             x = self.dataset.graph.x.to('cpu')
-            train_edges = train_edges.to('cpu')
+            train_edges = train_edges.edges.to('cpu')
 
             # update node embeddings (apply gnn) according to existing edges
             z = self.model(x, train_edges)
             # predict/score next day's edges (positives and all negatives)
-            scores = self.model.decode(z, test_edges.test_edges)
+            scores = self.model.decode(z, test_edges.edges, test_edges.attributes)
 
             # evaluation metrics
             for metric_at_k in self.metrics:
@@ -134,4 +138,3 @@ class TrainClassificationModel:
             plt.show()
 
 TrainClassificationModel()
-

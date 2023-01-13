@@ -5,9 +5,8 @@ from os.path import exists
 import networkx as nx
 from networkx import relabel_nodes, write_gpickle
 
-original_path = '../data/original_data/'
-clean_data_path = '../data/clean_data/'
-Graph_ = 'day_graphs/Graph_'
+from other.FILE_PATHS import ORIGINAL_DATA_PATH, CLEAN_DATA_PATH, Graph_
+
 
 class CleanData:
     def __init__(self):
@@ -35,7 +34,7 @@ class CleanData:
 
     @staticmethod
     def readNodeAttributes(original=False):
-        path = original_path if original else clean_data_path
+        path = ORIGINAL_DATA_PATH if original else CLEAN_DATA_PATH
         path += 'node_attributes'
         return CleanData.readPickleFile(path)
 
@@ -44,13 +43,13 @@ class CleanData:
         return pickle.load(open(path, 'rb'))
 
     def saveToPickle(self):
-        if not exists(clean_data_path[:-1]):
-            mkdir(clean_data_path[:-1])
-            mkdir(clean_data_path + 'day_graphs')
-        with open(clean_data_path + 'node_attributes', 'wb') as f:
+        if not exists(CLEAN_DATA_PATH[:-1]):
+            mkdir(CLEAN_DATA_PATH[:-1])
+            mkdir(CLEAN_DATA_PATH + 'day_graphs')
+        with open(CLEAN_DATA_PATH + 'node_attributes', 'wb') as f:
             pickle.dump(self.node_attributes, f)
         for i, graph in enumerate(self.graphs):
-            write_gpickle(graph, f'{clean_data_path}{Graph_}{i}')
+            write_gpickle(graph, f'{CLEAN_DATA_PATH}{Graph_}{i}')
 
     def nodesWithAvailableFeatures(self):
         return self.node_attributes.keys()
@@ -66,7 +65,7 @@ class CleanData:
 
     @staticmethod
     def loadDayGraphs(original=False):
-        path = original_path if original else clean_data_path
+        path = ORIGINAL_DATA_PATH if original else CLEAN_DATA_PATH
         graphs = []
         for day, _ in enumerate(scandir(path + 'day_graphs')):
             day_graph = CleanData.readPickleFile(f'{path}{Graph_}{day}')
