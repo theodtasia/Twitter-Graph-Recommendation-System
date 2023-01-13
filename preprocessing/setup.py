@@ -1,8 +1,7 @@
 from torch.nn.functional import leaky_relu
 
-from other.utils import dotdict, device
 from other.handle_files import validate_args
-from preprocessing.edge_handler import EdgeHandler
+from other.utils import dotdict, device
 
 args = dotdict({})
 
