@@ -1,42 +1,29 @@
 import torch
 from matplotlib import pyplot as plt
 from torch.nn import BCEWithLogitsLoss
-from torch.nn.functional import leaky_relu
 from torchmetrics import RetrievalRecall, RetrievalPrecision
 
+from other.utils import set_seed
 from recommendation_task.gnn_model import GNN_model
 from recommendation_task.graph_dataset import Dataset
-from other.handle_files import EDGE_ATTRIBUTES_DIM
-from other.utils import set_seed, device
 
-LR = 0.01
-WEIGHT_DECAY = 1e-5
-HIDDEN_CHANNELS = 16
-N_CONV_LAYERS = 1
-CONV_TYPE = 'GINConv'
-ACT_FUNC = leaky_relu
-DECODER_LAYERS = 2
-# to not use edge attributes set to 0  instead
-EDGE_ATTRIBUTES_DIMEN = EDGE_ATTRIBUTES_DIM
-EPOCHS = 100
-at_k = [10, 20]
 
 class TrainClassificationModel:
 
-    def __init__(self):
+    def __init__(self, args):
 
         set_seed()
-        self.device = device()
-        self.dataset = Dataset(self.device)
+        self.args = args
+        self.dataset = Dataset(self.args.device)
         self.criterion = BCEWithLogitsLoss()
-        self.metrics = [{k : (metric(k=k), []) for k in at_k}
+        self.metrics = [{k : (metric(k=k), []) for k in self.args.at_k}
                         for metric in [RetrievalRecall, RetrievalPrecision]]
 
         # train the same (continuously) model every day = don't reset daily
         self.model = self.recommendation_model()
-        self.model.to(self.device)
+        self.model.to(self.args.device)
         self.optimizer = torch.optim.Adam(params=self.model.parameters(),
-                                          lr=LR, weight_decay=WEIGHT_DECAY)
+                                          lr=self.args.LR, weight_decay=self.args.WEIGHT_DECAY)
         self.train_model()
 
 
@@ -45,15 +32,15 @@ class TrainClassificationModel:
         return GNN_model(
             # Πάντα ίδια :
             in_channels = self.dataset.attr_dim,
-            hidden_channels = HIDDEN_CHANNELS,
+            hidden_channels = self.args.HIDDEN_CHANNELS,
 
             # Παράμετροι μοντέλου :
-            n_conv_layers = N_CONV_LAYERS,
-            conv_type= CONV_TYPE,
+            n_conv_layers = self.args.N_CONV_LAYERS,
+            conv_type= self.args.CONV_TYPE,
 
-            act_func=ACT_FUNC,
-            decoder_layers=DECODER_LAYERS,
-            edge_attributes_dim=EDGE_ATTRIBUTES_DIMEN
+            act_func=self.args.ACT_FUNC,
+            decoder_layers=self.args.DECODER_LAYERS,
+            edge_attributes_dim = self.args.edge_attrs_dim if self.args.use_edge_attrs else 0
         )
 
 
@@ -74,10 +61,10 @@ class TrainClassificationModel:
 
     def run_day_training(self, train_edges):
 
-        self.model.to(self.device)
+        self.model.to(self.args.device)
         self.model.train()
 
-        for epoch in range(EPOCHS):
+        for epoch in range(self.args.EPOCHS):
 
             self.optimizer.zero_grad()
 
@@ -93,14 +80,14 @@ class TrainClassificationModel:
             negatives = self.model.decode(z, negatives.edges, negatives.attributes)
 
             link_labels = torch.tensor([1] * len(positives) + [0] * len(negatives),
-                                       device=self.device, dtype=torch.float32)
+                                       device=self.args.device, dtype=torch.float32)
 
             loss = self.criterion(torch.cat([positives, negatives]),
                                   link_labels)
 
             loss.backward()
             self.optimizer.step()
-            if epoch % 10 == 0 or epoch == EPOCHS -1:
+            if epoch % 10 == 0 or epoch == self.args.EPOCHS -1:
                 print('Epoch', epoch, loss.item())
 
 
@@ -136,5 +123,3 @@ class TrainClassificationModel:
 
             plt.legend(loc='upper left')
             plt.show()
-
-TrainClassificationModel()

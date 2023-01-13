@@ -12,7 +12,7 @@ class GNN_model(nn.Module):
                  edge_attributes_dim=0, decoder_layers=None):
         nn.Module.__init__(self)
 
-        self.use_edge_attributes = edge_attributes_dim > 0
+        self.use_edge_attrs = edge_attributes_dim > 0
 
         # conv layers
         self.n_conv_layers = n_conv_layers
@@ -76,8 +76,7 @@ class GNN_model(nn.Module):
     def multilayered_decoder(self, z, edge_index, edge_attributes):
 
         out = z[edge_index[0]] * z[edge_index[1]]
-        if self.use_edge_attributes:
-            print(edge_attributes)
+        if self.use_edge_attrs:
             out = torch.cat([out, edge_attributes.to(next(self.parameters()).device)], dim=-1)
 
         for i in range(len(self.decoder)):

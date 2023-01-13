@@ -56,4 +56,6 @@ def validate_args(args):
     args.clean_dataset = not feature_saved(CLEAN_DATA_PATH) \
                          or not feature_saved(CLEAN_DATA_PATH + 'day_graphs/')
 
+    if args.use_edge_attrs and args.DECODER_LAYERS is None:
+        args.DECODER_LAYERS = 2
     return args

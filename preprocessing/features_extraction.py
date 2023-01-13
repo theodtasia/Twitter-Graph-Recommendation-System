@@ -14,7 +14,7 @@ class FeaturesExtraction:
 
     def __init__(self, args):
 
-        self.__run_feature_extraction(args.use_stats_based_attr)
+        self.__run_feature_extraction(args.use_stats_based_attrs)
 
         self.use_topological_node_attrs = args.use_topological_node_attrs
 
