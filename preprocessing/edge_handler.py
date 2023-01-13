@@ -1,29 +1,22 @@
 import pickle
-from os import mkdir
 from os.path import exists
 
 import networkx as nx
 import torch
 
 from preprocessing.clean_datasets import CleanData
-from other.FILE_PATHS import TEST_EDGES_PATH, EDGE_ATTRIBUTES_PATH, EDGE_ATTRIBUTES_DIM
+from other.FILE_PATHS import TEST_EDGES_PATH, EDGE_ATTRIBUTES_PATH
 from other.utils import dotdict
 
 
 class EdgeHandler:
 
-    def __init__(self, extract_edge_attrs = False):
+    def __init__(self, args):
 
-        find_test_edges = not exists(TEST_EDGES_PATH[:-1])
-        self.find_edge_attrs = not exists(EDGE_ATTRIBUTES_PATH[:-1]) and extract_edge_attrs
+        self.use_edge_attrs = args.use_edge_attrs
+        self.day_limit = args.rerun_edge_attrs_day_limit
 
-        if find_test_edges:
-            mkdir(TEST_EDGES_PATH[:-1])
-        if self.find_edge_attrs:
-            mkdir(EDGE_ATTRIBUTES_PATH[:-1])
-
-        if find_test_edges or self.find_edge_attrs:
-            print(find_test_edges, self.find_edge_attrs)
+        if args.find_test_edges or args.rerun_edge_attrs:
             print("preprocessing")
             self._preproccessing()
 
@@ -52,7 +45,7 @@ class EdgeHandler:
                 self._save_negativeGi(
                     self._dayGraph_negativeEdges(graph), day
                 )
-            if not exists(self._edgeAttributesFile(day)) and self.find_edge_attrs:
+            if self.use_edge_attrs and day <= self.day_limit and not exists(self._edgeAttributesFile(day)) :
                 self._save_edge_attributes(day)
 
     def _dayGraph_negativeEdges(self, graph):
@@ -89,6 +82,7 @@ class EdgeHandler:
 
 
     def _save_edge_attributes(self, day):
+        print("Update edge attributes according to ", self.merged)
 
         attributes_functs = [nx.jaccard_coefficient, nx.resource_allocation_index, nx.preferential_attachment]
         attributes = [
@@ -107,12 +101,12 @@ class EdgeHandler:
         return min(v, u), max(v, u)
 
     @staticmethod
-    def lookup_edge_attributes(attributes, edge_index):
+    def lookup_edge_attributes(attributes, edge_index, edge_attrs_dim=3):
         if attributes is None:
             return None
         attributes = [
             attributes.get(EdgeHandler.edge_key(v, u),
-                           [0] * EDGE_ATTRIBUTES_DIM)
+                           [0] * edge_attrs_dim)
             for (v, u) in edge_index.T
         ]
         return torch.tensor(attributes, dtype=torch.float32)
