@@ -111,10 +111,10 @@ class TrainClassificationModel:
             # perform evaluation on cpu to avoid cuda.OutOfMemoryError
             self.model = self.model.to('cpu')
             x = self.dataset.graph.x.to('cpu')
-            train_edges = train_edges.to('cpu')
+            train_edges = train_edges.edges.to('cpu')
 
             # update node embeddings (apply gnn) according to existing edges
-            z = self.model(x, train_edges.edges)
+            z = self.model(x, train_edges)
             # predict/score next day's edges (positives and all negatives)
             scores = self.model.decode(z, test_edges.edges, test_edges.attributes)
 

@@ -1,3 +1,5 @@
+import glob
+
 import networkx as nx
 import torch
 from torch_geometric.data import Data
@@ -5,8 +7,8 @@ from torch_geometric.utils import negative_sampling
 
 from preprocessing.clean_datasets import *
 from preprocessing.clean_datasets import clean_data_path, Graph_
-from preprocessing.features_extraction import FeaturesExtraction
-from preprocessing.edge_handler import EdgeHandler
+from preprocessing.features_extraction import FeaturesExtraction, DAY_NODE_ATTRS_PATH
+from preprocessing.edge_handler import EdgeHandler, EDGE_ATTRIBUTES_PATH
 from recommendation_task.utils import numOfGraphs, dotdict
 
 INIT_DAY = 0
@@ -15,6 +17,9 @@ EXTRACT_TOPOL_ATTRS = False
 # feature extractor configuration (for ex, scale arg value) haven't changed
 # since last run
 SAME_ATTRS_CONFIG = True
+
+EXTRACT_EDGE_ATTRIBUTES = True
+
 
 
 class Dataset:
@@ -25,6 +30,7 @@ class Dataset:
         # will be incremented to 0 when the first graph (Graph_{INIT_DAY}) is loaded
         self.day = INIT_DAY - 1
         self.numOfGraphs = numOfGraphs()
+        self.last_day = self._last_day()
 
         self.featureExtractor = FeaturesExtraction(extract_topological_attr=EXTRACT_TOPOL_ATTRS,
                                                    load_from_file= SAME_ATTRS_CONFIG)
@@ -37,8 +43,17 @@ class Dataset:
     def has_next(self):
         # checked before loading graph
         # when day = -1, Graph_0 and Graph_1 will be loaded (therefore 2)
-        return self.day + 2 < self.numOfGraphs
+        return self.day + 2 < self.last_day
 
+    def _last_day(self):
+
+        last_day_with_centrality_attrs = len(glob.glob(f'{DAY_NODE_ATTRS_PATH}nodeAttrsG_*')) \
+            if EXTRACT_TOPOL_ATTRS and exists(DAY_NODE_ATTRS_PATH[:-1]) else self.numOfGraphs+1
+
+        last_day_with_edge_attrs = len(glob.glob(f'{EDGE_ATTRIBUTES_PATH}edge_attrsG_*')) \
+            if EXTRACT_EDGE_ATTRIBUTES and exists(EDGE_ATTRIBUTES_PATH[:-1]) else self.numOfGraphs+1
+
+        return min(self.numOfGraphs, last_day_with_centrality_attrs, last_day_with_edge_attrs)
 
     def get_dataset(self):
         """
@@ -51,8 +66,11 @@ class Dataset:
         """
         self._set_day()
         train_edges = self._to_undirected(self.graph.edge_index)
+
+        edge_attributes = self.edgeHandler.loadEdgeAttributes(self.day)
+        edge_attributes = self.edgeHandler.lookup_edge_attributes(edge_attributes, train_edges)
         train_edges = dotdict({'edges':train_edges,
-                              'attributes': self.edgeHandler.loadEdgeAttributes(self.day)})
+                              'attributes': edge_attributes})
 
         test_edges = self.edgeHandler.loadTestEdges(self.day + 1)
         return train_edges, test_edges

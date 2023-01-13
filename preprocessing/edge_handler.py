@@ -15,16 +15,18 @@ EDGE_ATTRIBUTES_DIM = 3
 
 class EdgeHandler:
 
-    def __init__(self):
-        n_Graphs = numOfGraphs()
-        if not exists(TEST_EDGES_PATH) or not exists(EdgeHandler._negativeEdgesFile(n_Graphs - 1)) \
-        or not exists(EDGE_ATTRIBUTES_PATH) or not exists(EdgeHandler._edgeAttributesFile(n_Graphs - 1)):
+    def __init__(self, extract_edge_attrs = False):
 
-            if not exists(TEST_EDGES_PATH[:-1]):
-                mkdir(TEST_EDGES_PATH[:-1])
-            if not exists(EDGE_ATTRIBUTES_PATH[:-1]):
-                mkdir(EDGE_ATTRIBUTES_PATH[:-1])
+        find_test_edges = not exists(TEST_EDGES_PATH[:-1])
+        self.find_edge_attrs = not exists(EDGE_ATTRIBUTES_PATH[:-1]) and extract_edge_attrs
 
+        if find_test_edges:
+            mkdir(TEST_EDGES_PATH[:-1])
+        if self.find_edge_attrs:
+            mkdir(EDGE_ATTRIBUTES_PATH[:-1])
+
+        if find_test_edges or self.find_edge_attrs:
+            print(find_test_edges, self.find_edge_attrs)
             print("preprocessing")
             self._preproccessing()
 
@@ -32,11 +34,15 @@ class EdgeHandler:
     def loadTestEdges(self, day):
         test_edges = dotdict(pickle.load(open(EdgeHandler._negativeEdgesFile(day), 'rb')))
         edge_attributes = self.loadEdgeAttributes(day)
-        test_edges.attributes = self.lookup_edge_attributes(edge_attributes, test_edges.test_edges)
+        test_edges.attributes = self.lookup_edge_attributes(edge_attributes, test_edges.edges)
+
         return test_edges
 
     def loadEdgeAttributes(self, day):
-        return pickle.load(open(EdgeHandler._edgeAttributesFile(day), 'rb'))
+        try:
+            return pickle.load(open(EdgeHandler._edgeAttributesFile(day), 'rb'))
+        except Exception:
+            return None
 
     def _preproccessing(self):
         self.graphs = CleanData.loadDayGraphs()
@@ -49,7 +55,7 @@ class EdgeHandler:
                 self._save_negativeGi(
                     self._dayGraph_negativeEdges(graph), day
                 )
-            if not exists(self._edgeAttributesFile(day)):
+            if not exists(self._edgeAttributesFile(day)) and self.find_edge_attrs:
                 self._save_edge_attributes(day)
 
     def _dayGraph_negativeEdges(self, graph):
@@ -105,6 +111,8 @@ class EdgeHandler:
 
     @staticmethod
     def lookup_edge_attributes(attributes, edge_index):
+        if attributes is None:
+            return None
         attributes = [
             attributes.get(EdgeHandler.edge_key(v, u),
                            [0] * EDGE_ATTRIBUTES_DIM)

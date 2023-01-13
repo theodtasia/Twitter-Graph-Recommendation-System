@@ -5,6 +5,9 @@ from torch.nn.functional import dropout
 from torch_geometric.nn import SAGEConv, GINConv, GATConv, GCNConv
 from torch_geometric.nn.models import MLP
 
+from recommendation_task.utils import device
+
+
 class GNN_model(nn.Module):
 
     def __init__(self, in_channels, hidden_channels, n_conv_layers, conv_type, act_func,
@@ -76,7 +79,7 @@ class GNN_model(nn.Module):
 
         out = z[edge_index[0]] * z[edge_index[1]]
         if self.use_edge_attributes:
-            out = torch.cat([out, edge_attributes], dim=-1)
+            out = torch.cat([out, edge_attributes.to(next(self.parameters()).device)], dim=-1)
 
         for i in range(len(self.decoder)):
             out = self.decoder[i](out)
