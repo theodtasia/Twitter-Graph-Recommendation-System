@@ -6,7 +6,7 @@ import torch_geometric
 
 
 def device():
-    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    return 'cpu' # torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def set_seed():
