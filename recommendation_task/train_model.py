@@ -1,6 +1,5 @@
 import json
 import time
-from datetime import datetime
 
 import torch
 from matplotlib import pyplot as plt
@@ -133,7 +132,7 @@ class TrainClassificationModel:
 
 
         self.args.device, self.args.ACT_FUNC = "", str(self.args.ACT_FUNC)
-        with open(f'{self.args.file_name}.json', 'w') as json_file:
+        with open(f'{RESULTS_DIR}{self.args.file_name}.json', 'w') as json_file:
             json.dump(self.args, json_file, indent=4)
 
     def plot_results(self):

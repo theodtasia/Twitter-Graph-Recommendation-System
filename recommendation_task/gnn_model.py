@@ -49,7 +49,7 @@ class GNN_model(nn.Module):
             return GCNConv(in_channels= in_channels, out_channels=hidden_channels, normalize=True)
         elif conv_type == 'GINConv':
             return GINConv(MLP(in_channels= in_channels, hidden_channels=hidden_channels, out_channels=hidden_channels,
-                               num_layers=5, act=act_func.__name__, dropout=0.2))
+                               num_layers=3, act=act_func.__name__, dropout=0.2))
         elif conv_type == 'GATConv':
             return GATConv(in_channels= in_channels, out_channels=hidden_channels, dropout=0.1)
 
