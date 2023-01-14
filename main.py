@@ -15,13 +15,13 @@ def set_arguments():
     args.topological_attrs_dim = 5
     args.use_topological_node_attrs = False
     args.rerun_topological_node_attrs = False
-    args.rerun_topological_node_attrs_day_limit = 0
+    args.rerun_topological_node_attrs_day_limit = 23
 
     # edge attributes
     args.edge_attrs_dim = 3
     args.use_edge_attrs = False
     args.rerun_edge_attrs = False
-    args.rerun_edge_attrs_day_limit = 0
+    args.rerun_edge_attrs_day_limit = 13
 
     # other
     # args.find_test_edges -> set by the validator
@@ -39,7 +39,7 @@ def set_arguments():
     args.EPOCHS = 100
     args.at_k = [10, 20]
 
-    args.file_name = "GNN dim 16 and 3 aggr layers"
+    args.file_name = "GNN dim 16 and 3 aggr layers scale binaries"
 
     return validate_args(args)
 
