@@ -31,7 +31,7 @@ def set_arguments():
     # training parameters
     args.LR = 0.005
     args.WEIGHT_DECAY = 1e-5
-    args.HIDDEN_CHANNELS = 16
+    args.HIDDEN_CHANNELS = 32
     args.N_CONV_LAYERS = 1
     args.CONV_TYPE = 'GINConv'
     args.ACT_FUNC = leaky_relu
@@ -39,7 +39,7 @@ def set_arguments():
     args.EPOCHS = 100
     args.at_k = [10, 20]
 
-    args.file_name = "GNN dim 16 and 3 aggr layers scale binaries lr 0.005"
+    args.file_name = "GNN dim 32 and 3 aggr layers scale binaries lr 0.005"
 
     return validate_args(args)
 

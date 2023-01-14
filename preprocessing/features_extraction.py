@@ -124,8 +124,8 @@ class FeaturesExtraction:
 
     def __scale(self):
         # don't scale the following features:
-        columns = ['clustering', 'degree_centrality', 'closeness', 'betweeness', 'pr', 'verified']
-                  # + [f'party_{p}' for p in ['left', 'right', 'neutral', 'middle']]
+        columns = ['clustering', 'degree_centrality', 'closeness', 'betweeness', 'pr', 'verified'] \
+                  + [f'party_{p}' for p in ['left', 'right', 'neutral', 'middle']]
         columns = self.attributes.columns.difference(columns)
         scaler = StandardScaler()
         self.attributes[columns] = \

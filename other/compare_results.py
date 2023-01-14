@@ -9,9 +9,9 @@ class CompareResults:
 
     def __init__(self):
         self.results = self.read_results_files()
-        self.compare_plot_metric_results('RetrievalRecall@10')
+        self.compare_plot_metric_results('RetrievalRecall@20')
     def read_results_files(self):
-        files = glob.glob(f'../{RESULTS_DIR}*.json')
+        files = glob.glob(f'../{RESULTS_DIR}/to_compare/*.json')
         results = {}
         for file in files:
             with open(file, 'r') as f:
