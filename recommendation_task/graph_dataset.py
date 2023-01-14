@@ -22,7 +22,7 @@ class Dataset:
         self.final_day = self._final_day()
 
         self.featureExtractor = FeaturesExtraction(args)
-        self.attr_dim = self.featureExtractor.attr_dim
+        self.attr_dim = self.featureExtractor.attr_dim ; print(self.attr_dim)
         self.edgeHandler = EdgeHandler(args)
 
         self.graph = Data(edge_index=torch.empty((2, 0), dtype=torch.long, device=args.device))

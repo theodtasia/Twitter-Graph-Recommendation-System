@@ -131,10 +131,9 @@ class TrainClassificationModel:
                 self.args[label] = [el.item() for el in results_list]
         self.args.runtime_per_day = self.runtime_per_day
 
-        pattern = '%Y-%m-%d %H-%M-%S'
-        json_file = f"{RESULTS_DIR}{datetime.now():{pattern}}" + ".json"
+
         self.args.device, self.args.ACT_FUNC = "", str(self.args.ACT_FUNC)
-        with open(json_file, 'w') as json_file:
+        with open(f'{self.args.file_name}.json', 'w') as json_file:
             json.dump(self.args, json_file, indent=4)
 
     def plot_results(self):

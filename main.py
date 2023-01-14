@@ -39,6 +39,8 @@ def set_arguments():
     args.EPOCHS = 100
     args.at_k = [10, 20]
 
+    args.file_name = "GNN dim 32"
+
     return validate_args(args)
 
 
