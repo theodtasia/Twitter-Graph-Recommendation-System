@@ -101,7 +101,7 @@ class EdgeHandler:
 
     @staticmethod
     def lookup_edge_attributes(attributes, edge_index, edge_attrs_dim=3):
-        print('lookup')
+
         attributes = [
             attributes.get(EdgeHandler.edge_key(v, u),
                            [0] * edge_attrs_dim)

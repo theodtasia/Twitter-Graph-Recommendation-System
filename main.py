@@ -13,7 +13,7 @@ def set_arguments():
 
     # topological node attributes
     args.topological_attrs_dim = 5
-    args.use_topological_node_attrs = False
+    args.use_topological_node_attrs = True
     args.rerun_topological_node_attrs = False
     args.rerun_topological_node_attrs_day_limit = 23
 
@@ -21,7 +21,7 @@ def set_arguments():
     args.edge_attrs_dim = 3
     args.use_edge_attrs = False
     args.rerun_edge_attrs = False
-    args.rerun_edge_attrs_day_limit = 13
+    args.rerun_edge_attrs_day_limit = 11
 
     # other
     # args.find_test_edges -> set by the validator
@@ -29,7 +29,7 @@ def set_arguments():
     args.device = device()
 
     # training parameters
-    args.LR = 0.005
+    args.LR = 0.01
     args.WEIGHT_DECAY = 1e-5
     args.HIDDEN_CHANNELS = 32
     args.N_CONV_LAYERS = 1
@@ -39,7 +39,7 @@ def set_arguments():
     args.EPOCHS = 100
     args.at_k = [10, 20]
 
-    args.file_name = "GNN dim 32 and 3 aggr layers scale binaries lr 0.005"
+    args.file_name = "GNN dim 32 and 5 aggr layers lr 0.01 dec 2 topol edge"
 
     return validate_args(args)
 

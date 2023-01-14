@@ -19,13 +19,16 @@ class CompareResults:
         return results
 
     def compare_plot_metric_results(self, metric):
+        # plt.figure(figsize=(5,7))
         for file, results in self.results.items():
             metric_values = results[metric]
             days = range(0, len(metric_values))
             plt.plot(days, metric_values, label=file)
 
         plt.legend(loc='upper left')
+
         plt.show()
+
 
 
 CompareResults()
