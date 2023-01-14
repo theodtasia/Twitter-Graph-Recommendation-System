@@ -1,8 +1,13 @@
+import json
+import time
+from datetime import datetime
+
 import torch
 from matplotlib import pyplot as plt
 from torch.nn import BCEWithLogitsLoss
 from torchmetrics import RetrievalRecall, RetrievalPrecision
 
+from other.handle_files import RESULTS_DIR
 from other.utils import set_seed
 from recommendation_task.gnn_model import GNN_model
 from recommendation_task.graph_dataset import Dataset
@@ -18,6 +23,7 @@ class TrainClassificationModel:
         self.criterion = BCEWithLogitsLoss()
         self.metrics = [{k : (metric(k=k), []) for k in self.args.at_k}
                         for metric in [RetrievalRecall, RetrievalPrecision]]
+        self.runtime_per_day = []
 
         # train the same (continuously) model every day = don't reset daily
         self.model = self.recommendation_model()
@@ -53,9 +59,13 @@ class TrainClassificationModel:
             train_edges, test_edges = self.dataset.get_dataset()
 
             print('\nDay: ', self.dataset.day)
+            start = time.time()
 
             self.run_day_training(train_edges)
             self.test_on_next_day_graph(train_edges, test_edges)
+
+            self.runtime_per_day.append(time.time() - start)
+        self.save_results()
         self.plot_results()
 
 
@@ -114,12 +124,26 @@ class TrainClassificationModel:
                     print(f'{metric_func.__class__.__name__}@{k} = {result}')
 
 
+    def save_results(self):
+        for metric_at_k in self.metrics:
+            for k, (metric_func, results_list) in metric_at_k.items():
+                label = f'{metric_func.__class__.__name__}@{k}'
+                self.args[label] = [el.item() for el in results_list]
+        self.args.runtime_per_day = self.runtime_per_day
+
+        pattern = '%Y-%m-%d %H-%M-%S'
+        json_file = f"{RESULTS_DIR}{datetime.now():{pattern}}" + ".json"
+        self.args.device, self.args.ACT_FUNC = "", str(self.args.ACT_FUNC)
+        with open(json_file, 'w') as json_file:
+            json.dump(self.args, json_file, indent=4)
+
     def plot_results(self):
 
         for metric_at_k in self.metrics:
             for k, (metric_func, results_list) in metric_at_k.items():
                 days = range(len(results_list))
-                plt.plot(days, results_list, label=f'{metric_func.__class__.__name__}@{k}')
+                label = f'{metric_func.__class__.__name__}@{k}'
+                plt.plot(days, results_list, label=label)
 
             plt.legend(loc='upper left')
             plt.show()

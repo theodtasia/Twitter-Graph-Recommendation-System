@@ -24,8 +24,8 @@ class EdgeHandler:
 
     def loadTestEdges(self, day):
         test_edges = dotdict(pickle.load(open(EdgeHandler._negativeEdgesFile(day), 'rb')))
-        edge_attributes = self.loadEdgeAttributes(day)
-        test_edges.attributes = self.lookup_edge_attributes(edge_attributes, test_edges.edges) \
+
+        test_edges.attributes = self.lookup_edge_attributes(self.loadEdgeAttributes(day), test_edges.edges) \
                                 if self.use_edge_attrs else None
         return test_edges
 
@@ -101,7 +101,7 @@ class EdgeHandler:
 
     @staticmethod
     def lookup_edge_attributes(attributes, edge_index, edge_attrs_dim=3):
-
+        print('lookup')
         attributes = [
             attributes.get(EdgeHandler.edge_key(v, u),
                            [0] * edge_attrs_dim)

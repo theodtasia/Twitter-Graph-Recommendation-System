@@ -14,6 +14,9 @@ DAY_NODE_ATTRS_PATH = f'{CLEAN_DATA_PATH}node_attrs_per_day/'
 TEST_EDGES_PATH = f'{CLEAN_DATA_PATH}test_edges/'
 EDGE_ATTRIBUTES_PATH = f'{CLEAN_DATA_PATH}edge_attributes/'
 
+# results
+RESULTS_DIR = 'results/'
+
 def get_number_of_files(files):
     return len(glob.glob(files))
 
@@ -37,6 +40,9 @@ def feature_saved(dir_name):
     if not saved:
         mkdir(dir_name[:-1])
     return saved
+
+def make_save_results_dir():
+    feature_saved(RESULTS_DIR)
 
 
 def validate_args(args):

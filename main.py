@@ -1,6 +1,6 @@
 from torch.nn.functional import leaky_relu
 
-from other.handle_files import validate_args
+from other.handle_files import validate_args, make_save_results_dir
 from other.utils import *
 from preprocessing.clean_datasets import CleanData
 from recommendation_task.train_model import TrainClassificationModel
@@ -31,7 +31,7 @@ def set_arguments():
     # training parameters
     args.LR = 0.01
     args.WEIGHT_DECAY = 1e-5
-    args.HIDDEN_CHANNELS = 16
+    args.HIDDEN_CHANNELS = 32
     args.N_CONV_LAYERS = 1
     args.CONV_TYPE = 'GINConv'
     args.ACT_FUNC = leaky_relu
@@ -43,7 +43,7 @@ def set_arguments():
 
 
 def main():
-
+    make_save_results_dir()
     args = set_arguments()
     if args.clean_dataset:
         CleanData()

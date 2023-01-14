@@ -95,6 +95,7 @@ class Dataset:
             num_nodes=self.max_node,  # max node index in graph
             num_neg_samples=self.graph.edge_index.size(1))  # num of negatives = num of positives
         neg_edge_index = self._to_undirected(neg_edge_index)
+
         return dotdict({
             'edges': neg_edge_index,
             'attributes': EdgeHandler.lookup_edge_attributes(self.edge_attributes, neg_edge_index)
