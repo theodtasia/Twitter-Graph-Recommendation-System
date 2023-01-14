@@ -3,12 +3,14 @@ from os import scandir
 
 import networkx as nx
 from networkx import relabel_nodes, write_gpickle
+from tqdm import tqdm
 
 from other.handle_files import ORIGINAL_DATA_PATH, CLEAN_DATA_PATH, Graph_
 
 
 class CleanData:
     def __init__(self):
+        print("Clean Dataset")
         self.node_attributes = CleanData.readNodeAttributes(original=True)
         self.graphs = CleanData.loadDayGraphs(original=True)
         self.numOfGraphs = len(self.graphs)
@@ -100,7 +102,7 @@ class CleanData:
 
     def force_temporal(self):
         merged = nx.Graph()
-        for graph in self.graphs:
+        for graph in tqdm(self.graphs):
             intersection_edges = nx.intersection(merged, graph).edges()
             graph.remove_edges_from(e for e in graph.edges if e in intersection_edges)
             graph.remove_nodes_from(list(nx.isolates(graph)))

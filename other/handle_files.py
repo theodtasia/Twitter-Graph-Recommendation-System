@@ -3,8 +3,8 @@ from os import mkdir
 from os.path import exists
 
 # Clean Dataset
-ORIGINAL_DATA_PATH = '../data/original_data/'
-CLEAN_DATA_PATH = '../data/clean_data/'
+ORIGINAL_DATA_PATH = 'data/original_data/'
+CLEAN_DATA_PATH = 'data/clean_data/'
 Graph_ = 'day_graphs/Graph_'
 
 # feature extractor

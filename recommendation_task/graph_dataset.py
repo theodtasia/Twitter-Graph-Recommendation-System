@@ -52,8 +52,9 @@ class Dataset:
         self._set_day()
         train_edges = self._to_undirected(self.graph.edge_index)
         train_edges = dotdict({'edges': train_edges,
-                               'attributes': self.edgeHandler.lookup_edge_attributes(self.edge_attributes,
-                                                                                     train_edges)})
+                      'attributes': self.edgeHandler.lookup_edge_attributes(self.edge_attributes, train_edges)
+                                    if self.args.use_edge_attrs else None
+        })
         test_edges = self.edgeHandler.loadTestEdges(self.day + 1)
         return train_edges, test_edges
 
@@ -82,7 +83,7 @@ class Dataset:
         + load current day edge attributes         """
         edges = pickle.load(open(f'{CLEAN_DATA_PATH}{Graph_}{day}', 'rb')).edges()
         edges = torch.tensor(list(edges), dtype=torch.long, device=self.args.device).T
-        self.edge_attributes = self.edgeHandler.loadEdgeAttributes(self.day)
+        self.edge_attributes = self.edgeHandler.loadEdgeAttributes(self.day) if self.args.use_edge_attrs else None
         return edges
 
     def _to_undirected(self, edge_index):
@@ -97,4 +98,5 @@ class Dataset:
         return dotdict({
             'edges': neg_edge_index,
             'attributes': EdgeHandler.lookup_edge_attributes(self.edge_attributes, neg_edge_index)
+                          if self.args.use_edge_attrs else None
         })

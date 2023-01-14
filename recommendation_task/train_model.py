@@ -14,7 +14,7 @@ class TrainClassificationModel:
 
         set_seed()
         self.args = args
-        self.dataset = Dataset(self.args.device)
+        self.dataset = Dataset(self.args)
         self.criterion = BCEWithLogitsLoss()
         self.metrics = [{k : (metric(k=k), []) for k in self.args.at_k}
                         for metric in [RetrievalRecall, RetrievalPrecision]]

@@ -5,6 +5,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
+from tqdm import tqdm
 
 from preprocessing.clean_datasets import CleanData
 from other.handle_files import DAY_NODE_ATTRS_PATH, numOfGraphs
@@ -53,13 +54,12 @@ class FeaturesExtraction:
         graphs = CleanData.loadDayGraphs()
         merged_graph = nx.Graph()
 
-        for day, graph in enumerate(graphs):
+        for day, graph in enumerate(tqdm(graphs)):
             if day_limit < day:
                 return
 
             print(day)
             merged_graph = nx.compose(merged_graph, graph)
-            print("Update topological feats according to ", merged_graph)
 
             file = FeaturesExtraction._nodeAttributesFile(day)
             if not exists(file):

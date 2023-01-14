@@ -1,22 +1,56 @@
-import pickle
+from torch.nn.functional import leaky_relu
 
-from preprocessing.features_extraction import FeaturesExtraction
+from other.handle_files import validate_args
+from other.utils import *
+from preprocessing.clean_datasets import CleanData
+from recommendation_task.train_model import TrainClassificationModel
+
+def set_arguments():
+    args = dotdict({})
+
+    # node statistical features
+    args.use_stats_based_attrs = True
+
+    # topological node attributes
+    args.topological_attrs_dim = 5
+    args.use_topological_node_attrs = False
+    args.rerun_topological_node_attrs = False
+    args.rerun_topological_node_attrs_day_limit = 0
+
+    # edge attributes
+    args.edge_attrs_dim = 3
+    args.use_edge_attrs = False
+    args.rerun_edge_attrs = False
+    args.rerun_edge_attrs_day_limit = 0
+
+    # other
+    # args.find_test_edges -> set by the validator
+    # args.clean_dataset   -> set by the validator
+    args.device = device()
+
+    # training parameters
+    args.LR = 0.01
+    args.WEIGHT_DECAY = 1e-5
+    args.HIDDEN_CHANNELS = 16
+    args.N_CONV_LAYERS = 1
+    args.CONV_TYPE = 'GINConv'
+    args.ACT_FUNC = leaky_relu
+    args.DECODER_LAYERS = None
+    args.EPOCHS = 100
+    args.at_k = [10, 20]
+
+    return validate_args(args)
 
 
-def loadGraphs():
-    #read node attributes
-    node_attributes = pickle.load(open('data/clean_data/node_attributes', 'rb'))
+def main():
 
-    # assign directory
-    directory = 'data/clean_data/day_graphs'
+    args = set_arguments()
+    if args.clean_dataset:
+        CleanData()
 
-    #extract features
-    node_features = FeaturesExtraction(node_attributes)
+    TrainClassificationModel(args)
 
 
 
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    loadGraphs()
-
+    main()
