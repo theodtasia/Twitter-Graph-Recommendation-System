@@ -29,7 +29,7 @@ def set_arguments():
     args.device = device()
 
     # training parameters
-    args.LR = 0.01
+    args.LR = 0.005
     args.WEIGHT_DECAY = 1e-5
     args.HIDDEN_CHANNELS = 16
     args.N_CONV_LAYERS = 1
@@ -39,7 +39,7 @@ def set_arguments():
     args.EPOCHS = 100
     args.at_k = [10, 20]
 
-    args.file_name = "GNN dim 16 and 3 aggr layers scale binaries"
+    args.file_name = "GNN dim 16 and 3 aggr layers scale binaries lr 0.005"
 
     return validate_args(args)
 
