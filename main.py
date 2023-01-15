@@ -13,7 +13,7 @@ def set_arguments():
 
     # topological node attributes
     args.topological_attrs_dim = 5
-    args.use_topological_node_attrs = True
+    args.use_topological_node_attrs = False
     args.rerun_topological_node_attrs = False
     args.rerun_topological_node_attrs_day_limit = 23
 
@@ -32,14 +32,14 @@ def set_arguments():
     args.LR = 0.01
     args.WEIGHT_DECAY = 1e-5
     args.HIDDEN_CHANNELS = 32
-    args.N_CONV_LAYERS = 1
+    args.N_CONV_LAYERS = 3
     args.CONV_TYPE = 'GINConv'
     args.ACT_FUNC = leaky_relu
     args.DECODER_LAYERS = None
     args.EPOCHS = 100
     args.at_k = [10, 20]
 
-    args.file_name = "GNN dim 32 and 5 aggr layers lr 0.01 dec 2 topol edge"
+    args.file_name = "BASE MODEL"
 
     return validate_args(args)
 
